@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+kerykeion
+pydantic
+python-dotenv
+google-generativeai
+opencv-python
+mediapipe
+numpy
+torch
+segmentation_models_pytorch
+scikit-image
+scikit-learn

@@ -1,0 +1,49 @@
+{
+  "planets": {
+    "Sun": {"ko": "태양", "desc": "자아, 정체성, 삶의 목적, 의식적인 에너지"},
+    "Moon": {"ko": "달", "desc": "감정, 본능, 무의식, 내면의 안정감"},
+    "Mercury": {"ko": "수성", "desc": "소통, 지성, 학습 방식, 의사결정"},
+    "Venus": {"ko": "금성", "desc": "사랑, 미적 감각, 관계, 가치관"},
+    "Mars": {"ko": "화성", "desc": "행동력, 의지, 열정, 투쟁심, 동기부여"},
+    "Jupiter": {"ko": "목성", "desc": "성장, 행운, 철학, 확장성, 긍정주의"},
+    "Saturn": {"ko": "토성", "desc": "책임감, 시련, 구조, 규율, 한계"},
+    "Uranus": {"ko": "천왕성", "desc": "혁신, 자유, 독창성, 예기치 않은 변화"},
+    "Neptune": {"ko": "해왕성", "desc": "직관, 영성, 환상, 공감 능력, 예술성"},
+    "Pluto": {"ko": "명왕성", "desc": "재생, 권력, 파괴와 창조, 심층적 변화, 무의식 깊은 곳"}
+  },
+  "signs": {
+    "Aries": {"ko": "양자리", "element": "Fire", "quality": "Cardinal", "desc": "개척자 정신, 용기, 충동성, 빠르고 강한 에너지"},
+    "Taurus": {"ko": "황소자리", "element": "Earth", "quality": "Fixed", "desc": "안정감 지향, 인내심, 물질적 감각, 지속성"},
+    "Gemini": {"ko": "쌍둥이자리", "element": "Air", "quality": "Mutable", "desc": "호기심, 적응력, 다재다능, 빠른 정보 습득"},
+    "Cancer": {"ko": "게자리", "element": "Water", "quality": "Cardinal", "desc": "감수성 풍부, 보호 본능, 가족애, 방어적 성향"},
+    "Leo": {"ko": "사자자리", "element": "Fire", "quality": "Fixed", "desc": "타고난 자신감, 창조력, 리더십, 극적이고 화려함"},
+    "Virgo": {"ko": "처녀자리", "element": "Earth", "quality": "Mutable", "desc": "분석력, 실용성 추구, 완벽주의, 봉사 정신"},
+    "Libra": {"ko": "천칭자리", "element": "Air", "quality": "Cardinal", "desc": "조화와 균형, 미적 감각, 외교력, 파트너십 중시"},
+    "Scorpio": {"ko": "전갈자리", "element": "Water", "quality": "Fixed", "desc": "강렬한 열정, 통찰력, 비밀스러움, 강진 집중력"},
+    "Sagittarius": {"ko": "사수자리", "element": "Fire", "quality": "Mutable", "desc": "낙천성, 지적 호기심과 모험, 독립성, 솔직함"},
+    "Capricorn": {"ko": "염소자리", "element": "Earth", "quality": "Cardinal", "desc": "야망과 성취, 책임감, 절제력, 보수적 성향"},
+    "Aquarius": {"ko": "물병자리", "element": "Air", "quality": "Fixed", "desc": "독창성, 진보적 시각, 인도주의, 자유분방"},
+    "Pisces": {"ko": "물고기자리", "element": "Water", "quality": "Mutable", "desc": "무한한 공감력, 직관력, 상상력, 희생과 포용"}
+  },
+  "houses": {
+    "1": {"theme": "자아와 외양", "desc": "개인의 페르소나, 타인에게 주는 첫인상, 세상에 나아가는 방식"},
+    "2": {"theme": "재물과 가치", "desc": "소유물, 자산, 재정적 능력, 자신에 대한 가치 평가"},
+    "3": {"theme": "소통과 환경", "desc": "의사소통 능력, 형제/이웃 환경, 단기 여행, 지적 관심사"},
+    "4": {"theme": "가정과 뿌리", "desc": "자신의 편안한 안식처, 유년기 환경, 심리적 토대, 사생활"},
+    "5": {"theme": "창조와 유희", "desc": "창조적 표현, 로맨스, 취미, 자녀, 생명력 발산"},
+    "6": {"theme": "노동과 건강", "desc": "일상의ルー틴, 직장 및 의무, 건강 관리 방식"},
+    "7": {"theme": "관계와 결합", "desc": "결혼 등 1:1 진지한 관계, 파트너십, 조화 혹은 협상"},
+    "8": {"theme": "변화와 공유", "desc": "죽음과 재생의 테마, 공유된 자산(돈), 심층 심리, 정신적 결속"},
+    "9": {"theme": "철학과 탐구", "desc": "학문, 여행, 신념 체계, 확장된 세계관과 삶의 장기적 비전"},
+    "10": {"theme": "사회적 성취", "desc": "경력과 직업, 명예, 사회적으로 인정받는 지위, 권위와 목표"},
+    "11": {"theme": "공동체와 이상", "desc": "친구 관계, 그룹/동호회 네트워킹, 인류애적 비전, 장래 희망"},
+    "12": {"theme": "무의식과 내면", "desc": "고립, 은둔 공간, 눈에 보이지 않는 것들, 숨겨진 재능, 영성과 카르마"}
+  },
+  "aspects": {
+    "Conjunction": {"ko": "합", "influence": "neutral", "orb": 8, "desc": "두 에너지의 완전한 융합. 긍정이면 큰 시너지, 부정이면 지나친 쏠림 현상을 낳습니다."},
+    "Sextile": {"ko": "섹스타일", "influence": "positive", "orb": 6, "desc": "서로 이롭고 조화로운 협력각. 새로운 기회와 소질을 부드럽게 이끌어줍니다."},
+    "Square": {"ko": "스퀘어", "influence": "negative", "orb": 8, "desc": "도전, 내적 갈등 징후. 위기감과 압박이 따르지만 극복 시 성장의 큰 원동력이 됩니다."},
+    "Trine": {"ko": "트라인", "influence": "positive", "orb": 8, "desc": "가장 순항하는 조화각. 자연스러운 재능 발휘와 편안한 행운, 막힘 없는 에너지 교류를 보여줍니다."},
+    "Opposition": {"ko": "어포지션", "influence": "negative", "orb": 8, "desc": "긴장되고 대립하는 각도이나, 역설적으로 타협과 객관화를 통해 균형 감각을 깨닫게 하는 자리입니다."}
+  }
+}

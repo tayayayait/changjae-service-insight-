@@ -1,0 +1,38 @@
+approval_policy = "never"
+sandbox_mode = "workspace-write"
+model = "gpt-5.4"
+model_reasoning_effort = "xhigh"
+personality = "pragmatic"
+
+[sandbox_workspace_write]
+network_access = true
+
+[features]
+web_search_request = true
+
+[notice.model_migrations]
+"gpt-5.1-codex-mini" = "gpt-5.2-codex"
+"gpt-5.2" = "gpt-5.2-codex"
+
+[windows]
+sandbox = "elevated"
+
+[mcp_servers.playwright]
+command = "npx"
+args = ["@playwright/mcp@latest"]
+
+[mcp_servers.stitch_mcp]
+command = "node"
+args = ['C:\Users\dbcdk\Desktop\Pregnancy-tailored drug therapy\.codex-tools\stitch-mcp\node_modules\@_davideast\stitch-mcp\bin\stitch-mcp.js', 'proxy']
+enabled = true
+
+[mcp_servers.stitch_mcp.env]
+STITCH_API_KEY = "AQ.Ab8RN6KpIfWaGJEkaiRw4WGA-xHT9A4zIZmPrMrGHNKUctW5nQ"
+
+[mcp_servers.nano_banana_2]
+command = "npx"
+args = ["-y", "nano-banana-2-mcp"]
+enabled = true
+
+[mcp_servers.nano_banana_2.env]
+GEMINI_API_KEY = "AIzaSyCrL5l1o2GNTucLLrmDAg0SFF_TzE5kK-o"

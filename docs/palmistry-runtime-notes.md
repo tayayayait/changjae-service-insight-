@@ -1,0 +1,29 @@
+# Palmistry Runtime Notes (2026-03-19)
+
+- Client-side timeout is enforced for palm actions to prevent infinite loading:
+  - `palm_analyze`: 25s
+  - `ai_palm_qa`: 20s
+- Palm runtime architecture is now Supabase-only:
+  - Browser runs `MediaPipe Hand Landmarker` (`@mediapipe/tasks-vision`) and extracts palm quality/features.
+  - Edge Function `action="palm_analyze"` validates `clientAnalysis` payload and builds classification/interpretation.
+  - Python palm backend proxy path is no longer used for palm action.
+- Fallback policy:
+  - Deterministic fake palm analysis fallback remains disabled.
+  - Missing/invalid client analysis returns explicit error payload + HTTP status.
+- Standard palm error codes:
+  - `PALM_INPUT_INVALID`
+  - `PALM_QUALITY_LOW`
+  - `PALM_BACKEND_UNAVAILABLE`
+  - `PALM_ANALYSIS_TIMEOUT`
+- Client palm pipeline:
+  - Precheck: hand detection, handedness, blur/exposure/centering/rotation quality.
+  - FeatureBuilder: landmark-derived `life/head/heart` length, intersections, `break_count`, `curvature`, confidence.
+- Edge palm response contract:
+  - `result.classification`: `palm_type`, `dominant_line`, `confidence`
+  - `result.features`: numeric feature map from client analysis
+  - `result.quality`: quality summary and reasons
+  - `result.handedness`, `result.elapsed_ms`
+- Frontend behavior:
+  - Quality reasons are surfaced in UI.
+  - MediaPipe initialization failure is surfaced as explicit retry guidance.
+  - Section changes and Q&A reuse one analysis result (no re-analyze).
