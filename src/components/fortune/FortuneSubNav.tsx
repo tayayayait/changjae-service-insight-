@@ -1,26 +1,36 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
-const NAV_ITEMS = [
+type FortuneNavItem = { label: string; path: string };
+
+const DEFAULT_NAV_ITEMS: FortuneNavItem[] = [
   { label: "운세 허브", path: "/fortune" },
   { label: "오늘의 운세", path: "/fortune/personal" },
   { label: "2026 신년 운세", path: "/fortune/yearly" },
 ];
 
+const toPathname = (path: string) => path.split("?")[0];
+
 const isActivePath = (currentPath: string, targetPath: string) => {
-  if (targetPath === "/fortune") {
+  const normalizedTargetPath = toPathname(targetPath);
+
+  if (normalizedTargetPath === "/fortune") {
     return currentPath === "/fortune";
   }
 
-  return currentPath.startsWith(targetPath);
+  return currentPath.startsWith(normalizedTargetPath);
 };
 
-export function FortuneSubNav() {
+export type FortuneSubNavProps = {
+  items?: FortuneNavItem[];
+};
+
+export function FortuneSubNav({ items = DEFAULT_NAV_ITEMS }: FortuneSubNavProps) {
   const location = useLocation();
 
   return (
     <nav className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto pb-1">
-      {NAV_ITEMS.map((item) => (
+      {items.map((item) => (
         <Link
           key={item.path}
           to={item.path}

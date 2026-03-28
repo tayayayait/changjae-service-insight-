@@ -349,3 +349,55 @@ CREATE POLICY "Users can view own analytics_events"
       AND guest_id = (current_setting('request.headers', true)::jsonb ->> 'x-guest-id')
     )
   );
+
+-- ═══════════════════════════════════════════
+-- 서비스 제안/요청 테이블
+-- ═══════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS service_suggestions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES user_profiles(id) ON DELETE SET NULL,
+  guest_id VARCHAR(100),
+  category VARCHAR(50) NOT NULL DEFAULT 'general',
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  contact TEXT,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  admin_note TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_service_suggestions_status ON service_suggestions(status);
+CREATE INDEX IF NOT EXISTS idx_service_suggestions_guest_id ON service_suggestions(guest_id);
+CREATE INDEX IF NOT EXISTS idx_service_suggestions_created_at ON service_suggestions(created_at DESC);
+
+ALTER TABLE service_suggestions ENABLE ROW LEVEL SECURITY;
+
+-- 누구나 제안 등록 가능
+DROP POLICY IF EXISTS "Anyone can insert suggestions" ON service_suggestions;
+CREATE POLICY "Anyone can insert suggestions"
+  ON service_suggestions
+  FOR INSERT
+  WITH CHECK (true);
+
+-- 누구나 제안 목록 조회 가능 (공개 게시판 형태)
+DROP POLICY IF EXISTS "Anyone can view suggestions" ON service_suggestions;
+CREATE POLICY "Anyone can view suggestions"
+  ON service_suggestions
+  FOR SELECT
+  USING (true);
+
+-- 관리자용: 누구나 UPDATE 가능 (클라이언트에서 PIN 인증으로 보호)
+DROP POLICY IF EXISTS "Anyone can update suggestions" ON service_suggestions;
+CREATE POLICY "Anyone can update suggestions"
+  ON service_suggestions
+  FOR UPDATE
+  USING (true);
+
+-- 관리자용: 누구나 DELETE 가능 (클라이언트에서 PIN 인증으로 보호)
+DROP POLICY IF EXISTS "Anyone can delete suggestions" ON service_suggestions;
+CREATE POLICY "Anyone can delete suggestions"
+  ON service_suggestions
+  FOR DELETE
+  USING (true);

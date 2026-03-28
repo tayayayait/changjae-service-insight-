@@ -1,6 +1,6 @@
 import { LoveReportPageBase } from "./LoveReportPageBase";
 
 export default function FuturePartnerPage() {
-  return <LoveReportPageBase serviceType="future-partner" />;
+  return <LoveReportPageBase key="future-partner" serviceType="future-partner" />;
 }
 

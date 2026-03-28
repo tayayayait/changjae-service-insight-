@@ -1,7 +1,5 @@
 import React from "react";
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { CategoryHeroWidget } from "./CategoryHeroWidget";
 
 interface BannerConfig {
   label: string;
@@ -12,28 +10,99 @@ interface BannerConfig {
 interface CategoryHeroProps {
   bannerConfig: BannerConfig;
   themeColor: string;
-  widgetType: string;
+  videoSrc?: string;
+  posterSrc?: string;
+  videoObjectPosition?: string;
+  videoObjectFit?: "cover" | "contain";
+  minHeight?: string;
 }
 
-export const CategoryHero: React.FC<CategoryHeroProps> = ({ bannerConfig, themeColor, widgetType }) => {
+export const CategoryHero: React.FC<CategoryHeroProps> = ({
+  bannerConfig,
+  themeColor,
+  videoSrc,
+  posterSrc,
+  videoObjectPosition,
+  videoObjectFit = "cover",
+  minHeight = "min-h-[360px]",
+}) => {
+  const hasMediaBackground = Boolean(videoSrc);
+  const [isVideoReady, setIsVideoReady] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!videoSrc) {
+      return;
+    }
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setIsVideoReady(true);
+    }, 220);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [videoSrc]);
+
+  const shouldRenderVideo = hasMediaBackground && isVideoReady;
+
   return (
     <div className="px-4 py-6 md:px-0">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
+      <div
         className={cn(
-          "relative overflow-hidden rounded-[32px] p-8 md:p-12 text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-8",
-          // 테마 컬러에 따른 그라데이션 적용 로직
-          themeColor === "accent-lavender" && "bg-gradient-to-br from-[#CBB7F6] to-[#A88DF0]",
-          themeColor === "accent-sky" && "bg-gradient-to-br from-[#AFCFFF] to-[#80AFFF]",
-          themeColor === "accent-mint" && "bg-gradient-to-br from-[#AEE7D8] to-[#7ED7C1]",
-          themeColor === "accent-pink" && "bg-gradient-to-br from-[#F3B6C7] to-[#EC94AD]",
-          !["accent-lavender", "accent-sky", "accent-mint", "accent-pink"].includes(themeColor) && "bg-slate-800"
+          "relative flex flex-col items-center justify-between gap-10 overflow-hidden rounded-[40px] p-10 text-white shadow-2xl md:flex-row md:p-16",
+          minHeight,
+          hasMediaBackground && "bg-black",
+          !hasMediaBackground &&
+            themeColor === "accent-lavender" &&
+            "bg-gradient-to-br from-[#CBB7F6]/90 to-[#A88DF0]/90 backdrop-blur-md",
+          !hasMediaBackground &&
+            themeColor === "accent-sky" &&
+            "bg-gradient-to-br from-[#AFCFFF]/90 to-[#80AFFF]/90 backdrop-blur-md",
+          !hasMediaBackground &&
+            themeColor === "accent-mint" &&
+            "bg-gradient-to-br from-[#AEE7D8]/90 to-[#7ED7C1]/90 backdrop-blur-md",
+          !hasMediaBackground &&
+            themeColor === "accent-pink" &&
+            "bg-gradient-to-br from-[#F3B6C7]/90 to-[#EC94AD]/90 backdrop-blur-md",
+          !hasMediaBackground &&
+            !["accent-lavender", "accent-sky", "accent-mint", "accent-pink"].includes(themeColor) &&
+            "bg-slate-800/90 backdrop-blur-md",
         )}
       >
-        {/* 장식용 패턴 */}
-        <div className="absolute inset-0 opacity-10 mix-blend-overlay pointer-events-none">
+        {posterSrc && !shouldRenderVideo ? (
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${posterSrc})` }}
+            aria-hidden="true"
+          />
+        ) : null}
+        {shouldRenderVideo ? (
+          <>
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="none"
+              poster={posterSrc}
+              className={cn(
+                "absolute inset-0 h-full w-full object-center",
+                videoObjectFit === "cover" ? "object-cover" : "object-contain",
+              )}
+              style={videoObjectPosition ? { objectPosition: videoObjectPosition } : undefined}
+            >
+              <source src={videoSrc} type="video/mp4" />
+            </video>
+            <div className="absolute inset-0 bg-gradient-to-r from-[#24303F]/48 via-[#24303F]/28 to-[#24303F]/40" />
+            <div className="absolute inset-0 bg-black/10" />
+          </>
+        ) : null}
+
+        <div className="pointer-events-none absolute inset-0 mix-blend-overlay opacity-10">
           <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
             <filter id="noise">
               <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
@@ -43,49 +112,32 @@ export const CategoryHero: React.FC<CategoryHeroProps> = ({ bannerConfig, themeC
         </div>
 
         <div className="relative z-10 max-w-xl text-center md:text-left">
-          <motion.span
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[12px] font-bold mb-4 tracking-wider"
-          >
-            {bannerConfig.label}
-          </motion.span>
-          <motion.h2
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-2xl md:text-4xl font-black mb-4 leading-tight"
-          >
-            {bannerConfig.title}
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="text-white/90 text-sm md:text-lg font-medium leading-relaxed"
-          >
+          <div className="mb-6 flex flex-col items-center gap-4 md:flex-row md:items-start">
+            <span className="inline-block rounded-full border border-white/20 bg-white/20 px-4 py-1.5 text-[13px] font-black uppercase tracking-widest text-white shadow-sm backdrop-blur-xl">
+              {bannerConfig.label}
+            </span>
+          </div>
+
+          <h2 className="mb-6 text-3xl font-black leading-tight tracking-tight text-white drop-shadow-sm md:text-5xl">
+            {bannerConfig.title.split("\n").map((line, index) => (
+              <React.Fragment key={index}>
+                {line}
+                <br />
+              </React.Fragment>
+            ))}
+          </h2>
+
+          <p className="max-w-lg text-sm font-medium leading-relaxed text-white/90 md:text-xl">
             {bannerConfig.description}
-          </motion.p>
+          </p>
         </div>
 
-        {/* Dynamic Widget 영역 */}
-        <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
-          className="relative z-10 shrink-0"
-        >
-          <CategoryHeroWidget type={widgetType} />
-        </motion.div>
-
-        {/* 장식용 배경 오브젝트 */}
-        <div className="absolute right-0 top-0 opacity-10 transform translate-x-1/3 -translate-y-1/3 pointer-events-none">
-          <div className="w-96 h-96 border-[32px] border-white rounded-full flex items-center justify-center">
-            <div className="w-64 h-64 border-[16px] border-white/50 rounded-full" />
+        <div className="pointer-events-none absolute right-0 top-0 translate-x-1/3 -translate-y-1/3 transform opacity-10">
+          <div className="flex h-96 w-96 items-center justify-center rounded-full border-[32px] border-white">
+            <div className="h-64 w-64 rounded-full border-[16px] border-white/50" />
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };

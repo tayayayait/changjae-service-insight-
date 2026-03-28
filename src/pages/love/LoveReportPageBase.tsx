@@ -1,66 +1,66 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { HeartHandshake, Loader2 } from "lucide-react";
 import { AnalysisPageShell } from "@/components/layout/AnalysisPageShell";
 import { LoveInputStepper } from "@/components/love/LoveInputStepper";
 import { StoryHeroCard } from "@/components/love/StoryHeroCard";
-import { MatchScorePanel } from "@/components/love/MatchScorePanel";
 import { LockedChapterCard } from "@/components/love/LockedChapterCard";
-import { LoveTimingTimeline } from "@/components/love/LoveTimingTimeline";
 import { UpgradeDrawer } from "@/components/love/UpgradeDrawer";
 import { RepeatUsePromptCard } from "@/components/love/RepeatUsePromptCard";
-import { ChanceMeter } from "@/components/love/ChanceMeter";
-import { CounselSnapshotCard } from "@/components/love/CounselSnapshotCard";
-import { CounselSectionCard } from "@/components/love/CounselSectionCard";
-import { CounselListCard } from "@/components/love/CounselListCard";
-import { ConfidenceNotesCard } from "@/components/love/ConfidenceNotesCard";
+import { ReportDataSourceAlert } from "@/components/love/ReportDataSourceAlert";
+import {
+  CoupleReportView,
+  FuturePartnerReportView,
+  ReunionReportView,
+} from "@/components/love/LoveReportViews";
+import { ServiceIntroScreen } from "@/components/common/ServiceIntroScreen";
 import { ErrorCard } from "@/components/common/ErrorCard";
 import { StickyCTA } from "@/components/common/StickyCTA";
+import { PaymentCheckoutSheet } from "@/components/common/PaymentCheckoutSheet";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { ServiceId, getServiceLandingById } from "@/lib/serviceCatalog";
+import { PAID_REPORT_PRICE_KRW } from "@/lib/paidReportCatalog";
 import {
-  LegacyLoveReportFull,
-  LegacyLoveReportPreview,
-  LoveReportFull,
-  LoveReportRecord,
-  LoveReportSection,
-  LoveServiceType,
-  LoveSubjectInput,
-} from "@/types/love";
-import { calculateSaju } from "@/lib/sajuEngine";
-import { calculateLoveScoreSet, extractLoveFeatureSet } from "@/lib/loveFeatureEngine";
-import { createLoveReport, getLoveReportPreview, unlockLoveReport } from "@/lib/loveReportStore";
-import { getLatestSajuResult } from "@/lib/resultStore";
-import {
+  getV3FullFromRecord,
+  getV3PreviewFromRecord,
   inferLoveReportVersion,
-  isLegacyLoveFullReport,
   isLegacyLovePreview,
-  normalizeLoveScoreSet,
 } from "@/lib/loveReportAdapters";
+import { LoveServiceType } from "@/types/love";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useLoveReportFlow } from "@/hooks/love/useLoveReportFlow";
+import { useLoveReportActions } from "@/hooks/love/useLoveReportActions";
+import { MysticalLoading } from "@/components/common/MysticalLoading";
 
 const PRICE_BY_SERVICE: Record<LoveServiceType, number> = {
-  "future-partner": 4900,
-  "couple-report": 6900,
-  "crush-reunion": 5900,
+  "future-partner": PAID_REPORT_PRICE_KRW,
+  "couple-report": PAID_REPORT_PRICE_KRW,
+  "crush-reunion": PAID_REPORT_PRICE_KRW,
 };
 
 const PRODUCT_CODE_BY_SERVICE: Record<LoveServiceType, string> = {
-  "future-partner": "LOVE_FUTURE_PARTNER_V2_COUNSEL",
-  "couple-report": "LOVE_COUPLE_REPORT_V2_COUNSEL",
-  "crush-reunion": "LOVE_CRUSH_REUNION_V2_COUNSEL",
+  "future-partner": "LOVE_FUTURE_PARTNER_V3",
+  "couple-report": "LOVE_COUPLE_REPORT_V3",
+  "crush-reunion": "LOVE_CRUSH_REUNION_V3",
+};
+
+const PAYMENT_SERVICE_ID_BY_SERVICE: Record<LoveServiceType, string> = {
+  "future-partner": "love-future-partner",
+  "couple-report": "love-couple-report",
+  "crush-reunion": "love-crush-reunion",
 };
 
 const TITLE_BY_SERVICE: Record<LoveServiceType, string> = {
-  "future-partner": "미래 배우자",
-  "couple-report": "커플 궁합",
-  "crush-reunion": "짝사랑·재회",
+  "future-partner": "미래 배우자 리포트",
+  "couple-report": "커플 궁합 리포트",
+  "crush-reunion": "재회 가능성 리포트",
 };
 
 const SUBTITLE_BY_SERVICE: Record<LoveServiceType, string> = {
-  "future-partner": "미래의 인연과 연애 습관을 상담형으로 해석합니다.",
-  "couple-report": "관계를 어떻게 운영해야 하는지 상담 리포트로 정리합니다.",
-  "crush-reunion": "재접촉과 정리의 분기점을 냉정하게 짚어드립니다.",
+  "future-partner": "미래 인연 유입 경로와 배우자 필터링 기준을 실행형으로 제시합니다.",
+  "couple-report": "관계 갈등 트리거와 회복 프로토콜을 운영형으로 제시합니다.",
+  "crush-reunion": "재접촉 가능 창과 중단 기준을 손실 최소화 관점에서 제시합니다.",
 };
 
 const PATH_BY_SERVICE: Record<LoveServiceType, string> = {
@@ -76,358 +76,70 @@ interface LoveReportPageBaseProps {
   reportId?: string;
 }
 
-const buildCounselTimeline = (record: LoveReportRecord) => {
-  if (inferLoveReportVersion(record) === "v1-story") {
-    return [];
-  }
-
-  const preview = record.preview;
-  if (isLegacyLovePreview(preview)) {
-    return [];
-  }
-
-  if (record.isUnlocked && record.fullReport && !isLegacyLoveFullReport(record.fullReport)) {
-    const sections = record.fullReport.sections.filter((section) => section.type !== "evidence").slice(0, 4);
-    return sections.map((section, index) => ({
-      label: index === 0 ? "지금의 핵심" : `상담 ${index + 1}`,
-      description: section.actionItems[0] ?? section.summary,
-    }));
-  }
-
-  return [
-    { label: "지금", description: preview.immediateAction },
-    { label: "30일 분기점", description: preview.scenarioHint },
-    { label: "신뢰도 체크", description: preview.confidenceSummary },
-  ];
-};
-
-function LegacyReportView({
-  record,
-  serviceType,
-  onReset,
-  detailMode,
-  reportPath,
-}: {
-  record: LoveReportRecord;
-  serviceType: LoveServiceType;
-  onReset: () => void;
-  detailMode: boolean;
-  reportPath: string;
-}) {
-  const preview = record.preview as LegacyLoveReportPreview;
-  const fullReport = isLegacyLoveFullReport(record.fullReport) ? (record.fullReport as LegacyLoveReportFull) : undefined;
-  const timelinePoints = fullReport?.chapters?.length
-    ? fullReport.chapters.map((chapter, index) => ({
-        label: `챕터 ${index + 1} · ${chapter.title}`,
-        description: chapter.actionTip,
-      }))
-    : [
-        { label: "지금", description: preview.openChapter.preview },
-        ...preview.lockedChapters.slice(0, 2).map((chapter, index) => ({
-          label: `${index + 1}차 흐름`,
-          description: chapter.teaser,
-        })),
-      ];
-
-  return (
-    <div className="space-y-5 pb-28">
-      <StoryHeroCard serviceType={serviceType} headline={preview.headline} summary={preview.summary} />
-
-      {serviceType === "crush-reunion" ? (
-        <ChanceMeter value={normalizeLoveScoreSet(preview.scoreSet).overall} />
-      ) : (
-        <MatchScorePanel scoreSet={preview.scoreSet} />
-      )}
-
-      <Card className="rounded-2xl border border-border bg-white p-5">
-        <h3 className="text-[16px] font-bold text-foreground">{preview.openChapter.title}</h3>
-        <p className="mt-2 text-[14px] leading-relaxed text-text-secondary">{preview.openChapter.content}</p>
-        <p className="mt-3 rounded-xl bg-gray-50 p-3 text-[13px] font-semibold text-foreground">
-          행동 제안: {preview.openChapter.actionTip}
-        </p>
-      </Card>
-
-      {!record.isUnlocked ? (
-        <section className="grid gap-3 md:grid-cols-2">
-          {preview.lockedChapters.map((chapter) => (
-            <LockedChapterCard key={chapter.key} chapter={chapter} />
-          ))}
-        </section>
-      ) : null}
-
-      {record.isUnlocked && fullReport?.chapters ? (
-        <section className="space-y-3">
-          {fullReport.chapters.map((chapter) => (
-            <Card key={chapter.key} className="rounded-2xl border border-border bg-white p-5">
-              <h3 className="text-[16px] font-bold text-foreground">{chapter.title}</h3>
-              <p className="mt-2 text-[14px] leading-relaxed text-text-secondary">{chapter.content}</p>
-              <p className="mt-3 rounded-xl bg-gray-50 p-3 text-[13px] font-semibold text-foreground">
-                행동 제안: {chapter.actionTip}
-              </p>
-            </Card>
-          ))}
-        </section>
-      ) : null}
-
-      <LoveTimingTimeline points={timelinePoints} />
-
-      <RepeatUsePromptCard nextRefreshAt={record.nextRefreshAt} onReanalyze={detailMode ? undefined : onReset} />
-
-      {detailMode ? (
-        <Button asChild variant="outline" className="h-12 w-full">
-          <Link to={reportPath}>새 상담 다시 시작</Link>
-        </Button>
-      ) : (
-        <Button variant="outline" className="h-12 w-full" onClick={onReset}>
-          다른 조건으로 다시 분석
-        </Button>
-      )}
-    </div>
-  );
-}
-
-function CounselReportView({
-  record,
-  serviceType,
-  reportPath,
-  onReset,
-  detailMode,
-}: {
-  record: LoveReportRecord;
-  serviceType: LoveServiceType;
-  reportPath: string;
-  onReset: () => void;
-  detailMode: boolean;
-}) {
-  const preview = record.preview;
-  const fullReport = record.fullReport && !isLegacyLoveFullReport(record.fullReport) ? (record.fullReport as LoveReportFull) : undefined;
-  const timelinePoints = buildCounselTimeline(record);
-  const evidenceSection = fullReport?.sections.find((section) => section.type === "evidence");
-  const mainSections = fullReport?.sections.filter((section) => section.type !== "evidence" && section.type !== "opening") ?? [];
-  const scoreSet = normalizeLoveScoreSet(preview.scoreSet);
-
-  if (isLegacyLovePreview(preview)) {
-    return null;
-  }
-
-  return (
-    <div className="space-y-5 pb-28">
-      <StoryHeroCard serviceType={serviceType} headline={preview.headline} summary={preview.summary} />
-      <CounselSnapshotCard
-        diagnosis={preview.openSection.conclusion}
-        relationshipTemperature={preview.relationshipTemperature}
-        immediateAction={preview.immediateAction}
-      />
-
-      {serviceType === "crush-reunion" ? <ChanceMeter value={scoreSet.overall} /> : <MatchScorePanel scoreSet={preview.scoreSet} />}
-
-      <CounselSectionCard section={preview.openSection} />
-
-      <Card className="rounded-[24px] border border-[#24303F]/10 bg-[#F8FAFC] p-5">
-        <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-text-secondary">30일 분기점</p>
-        <h3 className="mt-2 text-[18px] font-bold text-foreground">다음 흐름에서 무엇을 먼저 확인해야 하나</h3>
-        <p className="mt-3 text-[14px] leading-7 text-text-secondary">{preview.scenarioHint}</p>
-      </Card>
-
-      {!record.isUnlocked ? (
-        <>
-          <section className="grid gap-3 md:grid-cols-2">
-            {preview.lockedSectionSummaries.map((section) => (
-              <LockedChapterCard key={`${section.type}-${section.title}`} chapter={section} />
-            ))}
-          </section>
-
-          <ConfidenceNotesCard summary={preview.confidenceSummary} notes={[preview.ctaReason]} />
-        </>
-      ) : null}
-
-      {record.isUnlocked && fullReport ? (
-        <>
-          <section className="space-y-4">
-            {mainSections.map((section) => (
-              <CounselSectionCard key={`${section.type}-${section.title}`} section={section} />
-            ))}
-          </section>
-
-          <section className="grid gap-4 md:grid-cols-3">
-            <CounselListCard title="1주 실행 플랜" label="action plan" items={fullReport.actionPlan} tone="highlight" />
-            <CounselListCard title="지금 멈춰야 할 행동" label="avoid" items={fullReport.avoidList} tone="warning" />
-            <CounselListCard title="이럴 때 이렇게 말하기" label="prompt" items={fullReport.conversationPrompts} />
-          </section>
-
-          <ConfidenceNotesCard
-            summary={preview.confidenceSummary}
-            evidenceSummary={evidenceSection?.reason}
-            notes={fullReport.confidenceNotes}
-          />
-        </>
-      ) : null}
-
-      <LoveTimingTimeline title="상담 흐름 한눈에 보기" points={timelinePoints} />
-
-      <RepeatUsePromptCard nextRefreshAt={record.nextRefreshAt} onReanalyze={detailMode ? undefined : onReset} />
-
-      {detailMode ? (
-        <Button asChild variant="outline" className="h-12 w-full">
-          <Link to={reportPath}>새 상담 다시 시작</Link>
-        </Button>
-      ) : (
-        <Button variant="outline" className="h-12 w-full" onClick={onReset}>
-          다른 조건으로 다시 분석
-        </Button>
-      )}
-    </div>
-  );
-}
-
 export function LoveReportPageBase({ serviceType, reportId }: LoveReportPageBaseProps) {
   const profile = useAuthStore((state) => state.profile);
-  const [record, setRecord] = useState<LoveReportRecord | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isUnlocking, setIsUnlocking] = useState(false);
-  const [isLoadingSaved, setIsLoadingSaved] = useState(Boolean(reportId));
-  const [error, setError] = useState<string | null>(null);
-  const [upgradeOpen, setUpgradeOpen] = useState(false);
-  const [prefilled, setPrefilled] = useState<Partial<LoveSubjectInput> | undefined>(undefined);
+  const { record, setRecord, isLoadingSaved, error, setError, prefilled } = useLoveReportFlow({
+    profile,
+    reportId,
+    serviceType,
+  });
 
-  const detailMode = Boolean(reportId);
   const resolvedServiceType = serviceType ?? record?.serviceType;
-  const shellTitle = resolvedServiceType ? TITLE_BY_SERVICE[resolvedServiceType] : "연애 리포트";
+  const detailMode = Boolean(reportId);
+  const reportPath = resolvedServiceType ? PATH_BY_SERVICE[resolvedServiceType] : "/love/future-partner";
+  const price = resolvedServiceType ? PRICE_BY_SERVICE[resolvedServiceType] : PAID_REPORT_PRICE_KRW;
+  const productCode = resolvedServiceType ? PRODUCT_CODE_BY_SERVICE[resolvedServiceType] : "";
+  const shellTitle = resolvedServiceType ? TITLE_BY_SERVICE[resolvedServiceType] : "연애 상담 리포트";
   const shellSubtitle = resolvedServiceType
     ? SUBTITLE_BY_SERVICE[resolvedServiceType]
-    : "저장된 상담형 연애 리포트를 불러오는 중입니다.";
-  const reportPath = resolvedServiceType ? PATH_BY_SERVICE[resolvedServiceType] : "/category/love";
-  const price = resolvedServiceType ? PRICE_BY_SERVICE[resolvedServiceType] : 0;
-  const productCode = resolvedServiceType ? PRODUCT_CODE_BY_SERVICE[resolvedServiceType] : "";
+    : "관계 흐름을 분석하고 실행 가능한 상담 가이드라인을 제시합니다.";
 
-  useEffect(() => {
-    void (async () => {
-      if (profile) {
-        setPrefilled({
-          name: profile.name ?? "나",
-          gender: profile.gender ?? "female",
-          calendarType: profile.calendar_type ?? "solar",
-          year: profile.year ?? 1990,
-          month: profile.month ?? 1,
-          day: profile.day ?? 1,
-          hour: typeof profile.hour === "number" ? profile.hour : undefined,
-          minute: typeof profile.minute === "number" ? profile.minute : undefined,
-          timeBlock: profile.time_block ?? undefined,
-          birthPrecision: profile.time_block ? "time-block" : typeof profile.hour === "number" ? "exact" : "unknown",
-          location: profile.location ?? "서울",
-        });
-        return;
-      }
+  const {
+    isSubmitting,
+    isUnlocking,
+    upgradeOpen,
+    showIntro,
+    setUpgradeOpen,
+    setShowIntro,
+    runAnalysis,
+    unlock,
+  } = useLoveReportActions({
+    serviceType,
+    resolvedServiceType,
+    record,
+    setRecord,
+    setError,
+    price,
+    productCode,
+  });
 
-      const base = await getLatestSajuResult();
-      if (!base?.profileData) {
-        return;
-      }
-      setPrefilled({
-        ...base.profileData,
-        name: "나",
-      });
-    })();
-  }, [profile]);
-
-  useEffect(() => {
-    if (!reportId) {
-      setIsLoadingSaved(false);
-      return;
-    }
-
-    void (async () => {
-      setIsLoadingSaved(true);
-      setError(null);
-      try {
-        const existing = await getLoveReportPreview(reportId);
-        if (!existing) {
-          throw new Error("저장된 연애 리포트를 찾을 수 없습니다.");
-        }
-        setRecord(existing);
-      } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : "리포트 불러오기 실패");
-      } finally {
-        setIsLoadingSaved(false);
-      }
-    })();
-  }, [reportId]);
-
-  const runAnalysis = async (payload: {
-    subjectA: LoveSubjectInput;
-    subjectB?: LoveSubjectInput;
-    context: Record<string, unknown>;
-    relationMode?: string;
-  }) => {
-    if (!serviceType) {
-      setError("서비스 타입을 확인할 수 없습니다.");
-      return;
-    }
-
-    setIsSubmitting(true);
-    setError(null);
-    try {
-      const sajuA = calculateSaju(payload.subjectA);
-      const sajuB = payload.subjectB ? calculateSaju(payload.subjectB) : undefined;
-      const featureSet = extractLoveFeatureSet({
-        subjectA: payload.subjectA,
-        sajuA,
-        subjectB: payload.subjectB,
-        sajuB,
-      });
-      const scoreSet = calculateLoveScoreSet(serviceType, featureSet);
-
-      const created = await createLoveReport({
-        serviceType,
-        relationMode: payload.relationMode,
-        inputSnapshot: {
-          subjectA: payload.subjectA,
-          subjectB: payload.subjectB,
-          context: payload.context,
-        },
-        featureSet: {
-          ...featureSet,
-          timeConfidence: scoreSet.timing,
-        },
-      });
-
-      setRecord(created);
-    } catch (runError) {
-      setError(runError instanceof Error ? runError.message : "연애 리포트 생성 실패");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const unlock = async () => {
-    if (!record?.id || !resolvedServiceType) {
-      return;
-    }
-
-    setIsUnlocking(true);
-    setError(null);
-    try {
-      const unlocked = await unlockLoveReport({
-        id: record.id,
-        productCode,
-        amountKrw: price,
-      });
-      setRecord(unlocked);
-    } catch (unlockError) {
-      setError(unlockError instanceof Error ? unlockError.message : "리포트 해제 실패");
-    } finally {
-      setIsUnlocking(false);
-    }
-  };
-
-  const version = record ? inferLoveReportVersion(record) : "v2-counsel";
-  const ctaCopy = resolvedServiceType
-    ? `이 관계를 어떻게 다뤄야 하는지 이어서 보기 · ${toWon(price)}`
-    : "전체 상담 리포트 이어서 보기";
-
+  const version = record ? inferLoveReportVersion(record) : "v3-differentiated";
   const canRenderRecord = Boolean(record && resolvedServiceType);
+  const ctaCopy = resolvedServiceType
+    ? `전체 리포트 열기 · ${toWon(price)}`
+    : "전체 리포트 열기";
 
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+
+  const paymentServiceId = resolvedServiceType
+    ? PAYMENT_SERVICE_ID_BY_SERVICE[resolvedServiceType]
+    : null;
+
+  const handleOpenCheckout = async () => {
+    if (!record || !resolvedServiceType || !paymentServiceId) {
+      return;
+    }
+    setIsCheckoutOpen(true);
+  };
   const content = useMemo(() => {
+    if (isSubmitting) {
+      return (
+        <div className="flex min-h-[500px] flex-col items-center justify-center py-12">
+          <MysticalLoading categoryId="love" title="두 분의 우주적 궁합을 분석하고 있습니다" />
+        </div>
+      );
+    }
+
     if (isLoadingSaved) {
       return (
         <Card className="rounded-[28px] border border-border bg-white p-8 text-center">
@@ -441,15 +153,23 @@ export function LoveReportPageBase({ serviceType, reportId }: LoveReportPageBase
       if (detailMode) {
         return (
           <Card className="rounded-[28px] border border-border bg-white p-8 text-center">
-            <p className="text-[15px] font-semibold text-foreground">저장된 연애 리포트를 아직 불러오지 못했습니다.</p>
+            <p className="text-[15px] font-semibold text-foreground">저장된 연애 리포트를 찾을 수 없습니다.</p>
             <p className="mt-2 text-[14px] leading-relaxed text-text-secondary">
-              리포트가 삭제되었거나 현재 계정에서 접근할 수 없는 상태일 수 있습니다.
+              삭제되었거나 현재 세션에서 접근할 수 없는 상태입니다.
             </p>
             <Button asChild className="mt-5 bg-[#24303F] text-white">
-              <Link to="/mypage">보관함으로 돌아가기</Link>
+              <Link to="/mypage">리포트 다시보기</Link>
             </Button>
           </Card>
         );
+      }
+
+      if (showIntro && resolvedServiceType) {
+        const serviceId = `love-${resolvedServiceType}` as ServiceId;
+        const landingData = getServiceLandingById(serviceId);
+        if (landingData) {
+          return <ServiceIntroScreen serviceId={serviceId} onStart={() => setShowIntro(false)} />;
+        }
       }
 
       return (
@@ -467,33 +187,113 @@ export function LoveReportPageBase({ serviceType, reportId }: LoveReportPageBase
       );
     }
 
-    if (version === "v1-story") {
+    if (version === "v1-story" || isLegacyLovePreview(record.preview)) {
+      const legacyPreview = record.preview;
+      const openSummary =
+        "openChapter" in legacyPreview ? legacyPreview.openChapter.content : legacyPreview.summary;
+
       return (
-        <LegacyReportView
-          record={record}
-          serviceType={resolvedServiceType}
-          detailMode={detailMode}
-          reportPath={reportPath}
-          onReset={() => {
-            if (!detailMode) {
+        <div className="space-y-5 pb-28">
+          <StoryHeroCard
+            serviceType={resolvedServiceType}
+            headline={legacyPreview.headline}
+            summary={legacyPreview.summary}
+          />
+          <ReportDataSourceAlert dataSource={record.dataSource ?? "real"} />
+          <Card className="rounded-2xl border border-border bg-white p-5">
+            <p className="text-[14px] leading-relaxed text-text-secondary">{openSummary}</p>
+          </Card>
+          {"lockedChapters" in legacyPreview ? (
+            <section className="grid gap-3 md:grid-cols-2">
+              {legacyPreview.lockedChapters.map((chapter) => (
+                <LockedChapterCard key={chapter.key} chapter={chapter} masked />
+              ))}
+            </section>
+          ) : null}
+          <RepeatUsePromptCard
+            nextRefreshAt={record.nextRefreshAt}
+            onReanalyze={detailMode ? undefined : () => setRecord(null)}
+          />
+        </div>
+      );
+    }
+
+    const previewV3 = getV3PreviewFromRecord(record);
+    if (!previewV3) {
+      return (
+        <Card className="rounded-[28px] border border-border bg-white p-8 text-center">
+          <p className="text-[15px] font-semibold text-foreground">리포트 형식을 해석할 수 없습니다.</p>
+          <p className="mt-2 text-[14px] leading-relaxed text-text-secondary">
+            이전 버전 데이터일 수 있습니다. 같은 조건으로 다시 분석해 주세요.
+          </p>
+          {!detailMode ? (
+            <Button className="mt-5 bg-[#24303F] text-white" onClick={() => setRecord(null)}>
+              다시 분석하기
+            </Button>
+          ) : null}
+        </Card>
+      );
+    }
+
+    const fullV3 = record.isUnlocked ? getV3FullFromRecord(record, previewV3) : undefined;
+    const commonTail = (
+      <>
+        <RepeatUsePromptCard
+          nextRefreshAt={record.nextRefreshAt}
+          onReanalyze={detailMode ? undefined : () => setRecord(null)}
+        />
+        {detailMode ? (
+          <Button asChild variant="outline" className="h-12 w-full">
+            <Link to={reportPath}>같은 상담 다시 시작</Link>
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            className="h-12 w-full"
+            onClick={() => {
               setRecord(null);
-            }
-          }}
+              setError(null);
+            }}
+          >
+            다른 조건으로 다시 분석
+          </Button>
+        )}
+      </>
+    );
+
+    let reportView: JSX.Element;
+    if (previewV3.serviceType === "future-partner") {
+      reportView = (
+        <FuturePartnerReportView
+          preview={previewV3}
+          fullReport={fullV3?.serviceType === "future-partner" ? fullV3 : undefined}
+          isUnlocked={record.isUnlocked}
+        />
+      );
+    } else if (previewV3.serviceType === "couple-report") {
+      reportView = (
+        <CoupleReportView
+          preview={previewV3}
+          fullReport={fullV3?.serviceType === "couple-report" ? fullV3 : undefined}
+          isUnlocked={record.isUnlocked}
+        />
+      );
+    } else {
+      reportView = (
+        <ReunionReportView
+          preview={previewV3}
+          fullReport={fullV3?.serviceType === "crush-reunion" ? fullV3 : undefined}
+          isUnlocked={record.isUnlocked}
         />
       );
     }
 
     return (
-      <CounselReportView
-        record={record}
-        serviceType={resolvedServiceType}
-        reportPath={reportPath}
-        detailMode={detailMode}
-        onReset={() => {
-          setRecord(null);
-          setError(null);
-        }}
-      />
+      <div className="space-y-5 pb-28">
+        <ReportDataSourceAlert dataSource={record.dataSource ?? "real"} />
+        {reportView}
+        {commonTail}
+      </div>
     );
   }, [
     canRenderRecord,
@@ -505,6 +305,11 @@ export function LoveReportPageBase({ serviceType, reportId }: LoveReportPageBase
     reportPath,
     resolvedServiceType,
     serviceType,
+    setError,
+    setRecord,
+    showIntro,
+    runAnalysis,
+    setShowIntro,
     version,
   ]);
 
@@ -518,25 +323,56 @@ export function LoveReportPageBase({ serviceType, reportId }: LoveReportPageBase
     >
       {content}
 
-      {error ? <ErrorCard message={error} onRetry={() => setError(null)} /> : null}
-
-      {record && !record.isUnlocked && resolvedServiceType ? (
-        <>
-          <StickyCTA>
-            <Button className="h-14 w-full bg-[#24303F] text-white" onClick={() => setUpgradeOpen(true)}>
-              {ctaCopy}
-            </Button>
-          </StickyCTA>
-          <UpgradeDrawer
-            open={upgradeOpen}
-            onOpenChange={setUpgradeOpen}
-            title={`${TITLE_BY_SERVICE[resolvedServiceType]} 상담 리포트 전체 해제`}
-            priceText={toWon(price)}
-            loading={isUnlocking}
-            onUnlock={unlock}
-          />
-        </>
+      {canRenderRecord && !record?.isUnlocked ? (
+        <StickyCTA>
+          <Button
+            className="h-12 w-full bg-[#24303F] text-white"
+            onClick={() => setUpgradeOpen(true)}
+            disabled={isUnlocking}
+          >
+            {isUnlocking ? (
+              <span className="inline-flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                잠금 해제 중...
+              </span>
+            ) : (
+              ctaCopy
+            )}
+          </Button>
+        </StickyCTA>
       ) : null}
+
+      <UpgradeDrawer
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        title="상담 전체 리포트 잠금해제"
+        priceText={toWon(price)}
+        loading={isUnlocking}
+        onUnlock={handleOpenCheckout}
+      />
+
+      {record && resolvedServiceType && paymentServiceId ? (
+        <PaymentCheckoutSheet
+          isOpen={isCheckoutOpen}
+          onClose={() => setIsCheckoutOpen(false)}
+          onSuccess={async ({ orderNumber }) => {
+            await unlock({
+              provider: "portone",
+              providerOrderId: orderNumber,
+            });
+          }}
+          serviceId={paymentServiceId}
+          serviceType="love"
+          serviceName={TITLE_BY_SERVICE[resolvedServiceType]}
+          amount={price}
+          inputSnapshot={record.inputSnapshot as unknown as Record<string, unknown>}
+          previewPayload={record.preview as unknown as Record<string, unknown>}
+          reportPayload={record.fullReport as unknown as Record<string, unknown>}
+          assumePaid={false}
+        />
+      ) : null}
+
+      {error ? <ErrorCard message={error} onRetry={() => setError(null)} /> : null}
     </AnalysisPageShell>
   );
 }

@@ -13,7 +13,6 @@ CREATE TABLE user_profiles (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-
 -- 사용자 관심사 + 결과 테이블
 CREATE TABLE saju_results (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -33,33 +32,26 @@ CREATE TABLE saju_results (
   
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
-
 -- 인덱스 생성 (회원/비회원 조회 성능 향상)
 CREATE INDEX idx_saju_results_user_id ON saju_results(user_id);
 CREATE INDEX idx_saju_results_guest_id ON saju_results(guest_id);
-
 -- --------------------------------------------------------
 -- ROW LEVEL SECURITY (RLS) 정의
 -- --------------------------------------------------------
 
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE saju_results ENABLE ROW LEVEL SECURITY;
-
 -- user_profiles 정책 (자신만 읽고 쓰기)
 CREATE POLICY "Users can insert their own profile" 
   ON user_profiles FOR INSERT WITH CHECK (auth.uid() = id);
-
 CREATE POLICY "Users can update their own profile" 
   ON user_profiles FOR UPDATE USING (auth.uid() = id);
-
 CREATE POLICY "Users can read their own profile" 
   ON user_profiles FOR SELECT USING (auth.uid() = id);
-
 -- saju_results 정책 (관련 user_id 거나 guest_id 일치할 경우 접근 가능)
 -- (실제 서비스에서는 비회원 식별과 권한 로직을 추가로 보강해야 할 수도 있음)
 CREATE POLICY "Anyone can insert saju_results"
   ON saju_results FOR INSERT WITH CHECK (true);
-
 CREATE POLICY "Users can view their own saju_results"
   ON saju_results FOR SELECT USING (
     (user_id IS NOT NULL AND auth.uid() = user_id) OR

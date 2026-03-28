@@ -13,6 +13,7 @@ export type BirthPrecision = "exact" | "time-block" | "unknown";
 export type ShareCardVariant = "summary" | "love" | "fortune";
 
 export interface UserBirthData {
+  name?: string;
   calendarType: CalendarType;
   year: number;
   month: number;
@@ -22,6 +23,9 @@ export interface UserBirthData {
   timeBlock?: string;
   birthPrecision?: BirthPrecision;
   location?: string;
+  lat?: number;
+  lng?: number;
+  timezone?: string;
   gender: Gender;
 }
 
@@ -109,58 +113,586 @@ export const SAJU_ANALYSIS_SERVICE_IDS = [
   "saju-yearly-action-calendar",
 ] as const;
 
+export const SAJU_NEW_YEAR_2026_SERVICE_IDS = [
+  "saju-2026-overview",
+  "saju-2026-study-exam",
+  "saju-love-focus",
+  "saju-2026-wealth-business",
+  "saju-2026-investment-assets",
+  "saju-2026-career-aptitude",
+  "saju-2026-health-balance",
+  "saju-2026-yearly-outlook",
+] as const;
+
+export const SAJU_NEW_YEAR_2026_FOCUS_SERVICE_IDS = [
+  "saju-2026-overview",
+  "saju-2026-study-exam",
+  "saju-love-focus",
+  "saju-2026-wealth-business",
+  "saju-2026-investment-assets",
+  "saju-2026-career-aptitude",
+  "saju-2026-health-balance",
+] as const;
+
 export type SajuAnalysisServiceId = (typeof SAJU_ANALYSIS_SERVICE_IDS)[number];
-export type SajuServiceType = SajuAnalysisServiceId | "traditional-saju";
+export type SajuNewYear2026ServiceId = (typeof SAJU_NEW_YEAR_2026_SERVICE_IDS)[number];
+export type SajuServiceType = SajuAnalysisServiceId | SajuNewYear2026ServiceId | "traditional-saju";
+
+export type InterpretationIntensityLevel = "약" | "중" | "강";
+export type AttentionLevel = "낮음" | "보통" | "높음";
+export type ChangeSignalLevel = "약" | "중" | "강";
+
+export type NewYearFocusId = (typeof SAJU_NEW_YEAR_2026_FOCUS_SERVICE_IDS)[number];
+
+export interface NewYearSignalTrio {
+  interpretationIntensityLevel: InterpretationIntensityLevel;
+  attentionLevel: AttentionLevel;
+  changeSignalLevel: ChangeSignalLevel;
+  reason: string;
+}
+
+export interface NewYearQuickSummary {
+  verdict: string;
+  keywords: string[];
+  signalTrio: NewYearSignalTrio;
+}
+
+export interface NewYearTimelineNode {
+  quarter: string;
+  quarterSummary: string;
+  opportunity: string;
+  caution: string;
+  action: string;
+}
+
+export interface NewYearFocusCard {
+  focusId: NewYearFocusId;
+  focusLabel: string;
+  conclusion: string;
+  dos: string[];
+  donts: string[];
+  evidencePrimary: string;
+  evidenceExtra: string[];
+}
+
+export interface NewYearConsistencyMeta {
+  targetYear: number;
+  ganji: string;
+  age: number | null;
+  generatedAt: string;
+}
+
+export interface NewYearActionPlan90 {
+  day30: string[];
+  day60: string[];
+  day90: string[];
+}
+
+export interface NewYearConsumerFaqItem {
+  question: string;
+  answer: string;
+}
 
 export interface SajuReportPayloadCommon {
+  coreQuestion: string;
   coreInsights: string[];
   actionNow: string[];
   evidence: string[];
+  analysisBlocks: SajuAnalysisBlock[];
+}
+
+export interface SajuAnalysisBlock {
+  windowLabel: string;
+  timeRange: string;
+  coreFlow: string;
+  evidence: string;
+  opportunities: string[];
+  risks: string[];
+  actionStrategy: string[];
+}
+
+export interface SajuTrendPoint {
+  label: string;
+  value: number;
+}
+
+export type SajuTrendDirection = "up" | "down" | "flat";
+
+export interface SajuTrendRawBasis {
+  source: "manseryeok";
+  checkpoint: {
+    label: string;
+    offset: number;
+    unit: "year" | "week";
+    targetDate: string;
+    targetYear?: number;
+  };
+  ohengDistribution: Record<Oheng, number>;
+  yongsin: Oheng[];
+  seun?: {
+    year: number;
+    pillar: string;
+    element: Oheng;
+  };
+  temporalPillars?: {
+    yearPillar: string;
+    monthPillar: string;
+    dayPillar: string;
+    yearElement: Oheng;
+    monthElement: Oheng;
+    dayElement: Oheng;
+  };
+  factorScores: Record<string, number>;
+}
+
+export interface SajuTrendPointEvidence {
+  label: string;
+  value: number;
+  deltaFromPrev: number;
+  direction: SajuTrendDirection;
+  reasonSummary: string;
+  interpretation: string;
+  reasonDetails: string[];
+  rawBasis: SajuTrendRawBasis;
+}
+
+export type SajuReportSupplementVisualType =
+  | "timeline"
+  | "before-after"
+  | "decision-matrix"
+  | "flow-radar"
+  | "network-map"
+  | "energy-wave"
+  | "calendar-map";
+
+export interface SajuReportSupplementExecutionProtocol {
+  today: string[];
+  thisWeek: string[];
+  thisMonth: string[];
+  avoid: string[];
+}
+
+export interface SajuReportSupplementVisualExplainer {
+  type: SajuReportSupplementVisualType;
+  title: string;
+  items: string[];
+}
+
+export interface SajuReportSupplement {
+  deepInsightSummary: string;
+  deepDivePoints: string[];
+  executionProtocol: SajuReportSupplementExecutionProtocol;
+  checkpointQuestions: string[];
+  visualExplainers: SajuReportSupplementVisualExplainer[];
+}
+
+export interface SajuDaeunPhaseRoadmapItem {
+  phaseLabel: string;
+  ageRange: string;
+  yearRange: string;
+  coreFlow: string;
+  evidence: string;
+  opportunities: string[];
+  risks: string[];
+  actionStrategy: string[];
+}
+
+export interface SajuHelperPhaseRoadmapItem {
+  phaseLabel: string;
+  timeRange: string;
+  relationshipExpansion: string;
+  collaborationFlow: string;
+  mentorInfluxSignal: string;
+  guardPattern: string;
+  actionStrategy: string[];
+}
+
+export type SajuCareerStageId = "build-up" | "transition" | "expansion" | "stabilization";
+
+export interface SajuCareerStageFlowItem {
+  stageId: SajuCareerStageId;
+  label: string;
+  timeRange: string;
+  coreFlow: string;
+  evidence: string;
+  opportunities: string[];
+  risks: string[];
+  actionStrategy: string[];
+  transitionSignal: string;
+}
+
+export type SajuWealthLifecyclePhaseType = "accumulation" | "expansion" | "defense" | "volatility";
+
+export interface SajuWealthLifecycleStage {
+  phaseType: SajuWealthLifecyclePhaseType;
+  timeRange: string;
+  ageRange: string;
+  yearRange: string;
+  coreObjective: string;
+  opportunity: string;
+  risk: string;
+  operatingRules: string[];
+  transitionSignal: string;
 }
 
 export interface SajuLifetimeRoadmapPayload extends SajuReportPayloadCommon {
   longTermFlow: string;
   pivotMoments: string[];
   tenYearStrategy: string[];
+  stageTransitions: string[];
+  narrativeDirection: string;
+  maturityExpansionCleanup: string[];
+  supplement?: SajuReportSupplement;
 }
 
 export interface SajuDaeunShiftPayload extends SajuReportPayloadCommon {
   transitionSignal: string;
   ninetyDayActions: string[];
   avoidanceScenario: string[];
+  transitionSignals: string[];
+  changePoints: string[];
+  readinessActions: string[];
+  phaseRoadmap: SajuDaeunPhaseRoadmapItem[];
+  longHorizonDirection: string[];
+  preAtPostDiff: string[];
+  supplement?: SajuReportSupplement;
 }
 
 export interface SajuCareerTimingPayload extends SajuReportPayloadCommon {
   careerWindow: string;
+  careerArcSummary?: string;
+  stageFlow?: SajuCareerStageFlowItem[];
+  transitionSignal?: string;
+  currentYearFocus?: string;
   decisionTree: string[];
   executionChecklist: string[];
+  workModeFit: string;
+  decideNow: string[];
+  deferNow: string[];
+  gainVsLossPatterns: string[];
+  decisionCriteria: string[];
+  supplement?: SajuReportSupplement;
 }
 
 export interface SajuWealthFlowPayload extends SajuReportPayloadCommon {
   cashflowMap: string;
   riskZones: string[];
   assetRules: string[];
+  wealthLifecycleStages: SajuWealthLifecycleStage[];
+  assetTrendSeries: SajuTrendPoint[];
+  assetTrendEvidence?: SajuTrendPointEvidence[];
+  incomeStructure: string[];
+  spendingPatterns: string[];
+  accumulateVsExpand: string[];
+  financialNoGo: string[];
+  supplement?: SajuReportSupplement;
 }
 
 export interface SajuHelperNetworkPayload extends SajuReportPayloadCommon {
   helperMap: string;
   conflictPatterns: string[];
   networkGuide: string[];
+  helperProfiles: string[];
+  relationExpansionVsEntanglement: string[];
+  conflictLoops: string[];
+  helperEntryWindows: string[];
+  relationLayers: string[];
+  phaseRoadmap?: SajuHelperPhaseRoadmapItem[];
+  longHorizonDirection?: string[];
+  supplement?: SajuReportSupplement;
 }
 
 export interface SajuEnergyBalancePayload extends SajuReportPayloadCommon {
   energyCurve: string;
+  innateProfile: string;
+  operatingModel: string[];
+  stageShiftMap: string[];
+  longRangeStrategy: string[];
   routineDesign: string[];
   recoveryProtocol: string[];
+  energyRhythmSeries: SajuTrendPoint[];
+  energyRhythmEvidence?: SajuTrendPointEvidence[];
+  immersionMode: string[];
+  burnoutSignals: string[];
+  overloadAlerts: string[];
+  habitTweaks: string[];
+  recoveryRoutines: string[];
+  supplement?: SajuReportSupplement;
+}
+
+export interface SajuYearlyPhaseFocusMapItem {
+  phaseLabel: string;
+  focusPoint: string;
+  executionPattern: string;
+  checkpoint: string;
+}
+
+export interface SajuYearlyAccumulationTransitionFlowItem {
+  axis: string;
+  guidance: string;
+}
+
+export interface SajuYearlyTenYearFlowItem {
+  periodLabel: "0~2년" | "3~5년" | "6~10년";
+  phaseLabel: string;
+  interpretation: string;
+}
+
+export interface SajuYearlyKeyThemeItem {
+  theme: string;
+  interpretation: string;
+}
+
+export interface SajuYearlyQuarterNarrativeItem {
+  quarter: "1분기" | "2분기" | "3분기" | "4분기";
+  role: string;
+  meaning: string;
+  focus: string;
+  caution: string;
 }
 
 export interface SajuYearlyActionCalendarPayload extends SajuReportPayloadCommon {
+  oneLineTotalReview: string;
+  currentLifeFlow: string;
+  meaningOfThisYear: string;
+  tenYearFlow: SajuYearlyTenYearFlowItem[];
+  longPatternInterpretation: string[];
+  keyThemes: SajuYearlyKeyThemeItem[];
+  quarterNarratives: SajuYearlyQuarterNarrativeItem[];
+  yearEndResidue: string;
+  closingLine: string;
+  lifecycleExecutionPattern: string[];
+  phaseFocusMap: SajuYearlyPhaseFocusMapItem[];
+  accumulationTransitionFlow: SajuYearlyAccumulationTransitionFlowItem[];
+  longPracticeStrategy: string[];
+  yearToLifeBridge: string;
   quarterlyGoals: string[];
   monthlyActions: string[];
   riskCalendar: string[];
+  quarterThemes: string[];
+  monthlyPushCaution: string[];
+  actionCheckpoints: string[];
+  priorityQueue: string[];
+  supplement?: SajuReportSupplement;
 }
 
+export interface NewYear2026PayloadBase extends SajuReportPayloadCommon {
+  quickSummary: NewYearQuickSummary;
+  yearTimeline: NewYearTimelineNode[];
+  actionPlan90: NewYearActionPlan90;
+  consistencyMeta: NewYearConsistencyMeta;
+}
+
+export interface NewYear2026OverviewPayload extends NewYear2026PayloadBase {
+  focusCards: NewYearFocusCard[];
+}
+
+export interface NewYear2026StudyActionDiagnosis {
+  headline: string;
+  summary: string;
+  confidenceNote: string;
+}
+
+export interface NewYear2026StudyImmediateActions {
+  startNow: string[];
+  stopNow: string[];
+  prepNow: string[];
+}
+
+export interface NewYear2026StudyYearFlowSummary {
+  preparationPhase: string;
+  accelerationPhase: string;
+  showdownPhase: string;
+  wrapUpPhase: string;
+}
+
+export interface NewYear2026StudyQuarterlyDetail {
+  period: "1~3월" | "4~6월" | "7~9월" | "10~12월";
+  strengths: string[];
+  risks: string[];
+  recommendedStrategies: string[];
+  checkQuestionOrTip: string;
+}
+
+export interface NewYear2026StudyExamTypeGuides {
+  writtenExam: string[];
+  interviewOrOral: string[];
+  longTermLearning: string[];
+}
+
+export interface NewYear2026StudyPerformanceStrategy {
+  studyMethod: string[];
+  lifeManagement: string[];
+  mentalManagement: string[];
+}
+
+export interface NewYear2026StudyActionReport {
+  coreDiagnosis: NewYear2026StudyActionDiagnosis;
+  keyQuestion: string;
+  keyInsights: string[];
+  immediateActions: NewYear2026StudyImmediateActions;
+  yearFlowSummary: NewYear2026StudyYearFlowSummary;
+  quarterlyDetailed: NewYear2026StudyQuarterlyDetail[];
+  examTypeGuides: NewYear2026StudyExamTypeGuides;
+  failurePatterns: string[];
+  performanceStrategy: NewYear2026StudyPerformanceStrategy;
+  plainEvidence: string[];
+  finalSummary: string[];
+}
+
+export interface NewYear2026StudyExamPayload extends NewYear2026PayloadBase {
+  studyRhythm: string;
+  examWindows: string[];
+  mistakeTriggers: string[];
+  executionGuide: string[];
+  evidenceNotes: string[];
+  studyActionReport?: NewYear2026StudyActionReport;
+}
+
+export interface NewYear2026LovePayload extends NewYear2026PayloadBase {
+  relationshipFlow: string;
+  approachSignals: string[];
+  cautionPatterns: string[];
+  relationshipGuide: string[];
+  marriageDecisionBoard: string[];
+  meetingChannelPriority: string[];
+  greenFlagChecklist: string[];
+  redFlagChecklist: string[];
+  conflictProtocol: string[];
+  consumerFaq: NewYearConsumerFaqItem[];
+  evidenceNotes: string[];
+}
+
+export type NewYear2026QuarterLabel = "1분기" | "2분기" | "3분기" | "4분기";
+
+export interface NewYear2026WealthQuarterlyFlowCard {
+  quarter: NewYear2026QuarterLabel;
+  flowSummary: string;
+  keyPoint: string;
+  risk: string;
+  actionStrategy: string;
+}
+
+export interface NewYear2026WealthBusinessPayload extends NewYear2026PayloadBase {
+  cashflowPulse: string;
+  growthAxes: string[];
+  leakRisks: string[];
+  operatingRules: string[];
+  evidenceNotes: string[];
+  oneLineDiagnosis: string;
+  keyPoints: string[];
+  easyInterpretationPoints: string[];
+  annualFlowSummary: string;
+  quarterlyFlowCards: NewYear2026WealthQuarterlyFlowCard[];
+  revenueFlowDeepDive: string[];
+  businessManagementPoints: string[];
+  burnoutPreventionStrategies: string[];
+  actionChecklist: string[];
+  closingLine: string;
+}
+
+export interface NewYear2026InvestmentActionDiagnosis {
+  headline: string;
+  summary: string;
+}
+
+export interface NewYear2026InvestmentQuarterlyFlow {
+  quarter: NewYear2026QuarterLabel;
+  summary: string;
+  actionFocus: string[];
+  riskFocus: string[];
+}
+
+export interface NewYear2026InvestmentAssetClassGuides {
+  stocksEtf: string[];
+  realEstate: string[];
+  cashSavings: string[];
+  cryptoHighVolatility: string[];
+}
+
+export interface NewYear2026InvestmentSignalBoard {
+  watchSignals: string[];
+  entrySignals: string[];
+}
+
+export interface NewYear2026InvestmentActionReport {
+  coreDiagnosis: NewYear2026InvestmentActionDiagnosis;
+  keyQuestion: string;
+  keyInsights: string[];
+  immediateActions: string[];
+  absoluteCautions: string[];
+  quarterlyFlow: NewYear2026InvestmentQuarterlyFlow[];
+  assetClassGuides: NewYear2026InvestmentAssetClassGuides;
+  signalBoard: NewYear2026InvestmentSignalBoard;
+  riskAlerts: string[];
+  practicalChecklist: string[];
+  plainEvidence: string[];
+  flowTo2027: string;
+  finalConclusion: string[];
+}
+
+export interface NewYear2026InvestmentPayload extends NewYear2026PayloadBase {
+  entryBias: string;
+  watchSignals: string[];
+  riskAlerts: string[];
+  capitalRules: string[];
+  evidenceNotes: string[];
+  investmentActionReport?: NewYear2026InvestmentActionReport;
+}
+
+export interface NewYear2026CareerPayload extends NewYear2026PayloadBase {
+  fitRoleSignal: string;
+  strongWorkModes: string[];
+  misfitChoices: string[];
+  executionChecklist: string[];
+  evidenceNotes: string[];
+}
+
+export interface NewYear2026HealthQuarterlyFlowCard {
+  quarter: NewYear2026QuarterLabel;
+  flowSummary: string;
+  cautionPoint: string;
+  recommendedAction: string;
+}
+
+export interface NewYear2026HealthRoutineGuide {
+  morning: string[];
+  daytime: string[];
+  evening: string[];
+  weekly: string[];
+}
+
+export interface NewYear2026HealthPayload extends NewYear2026PayloadBase {
+  energyRhythm: string;
+  bodyPatterns: string[];
+  quarterlyFlowCards: NewYear2026HealthQuarterlyFlowCard[];
+  recoveryPriorities: string[];
+  overloadSignals: string[];
+  overloadChecklist: string[];
+  routineChecklist: string[];
+  routineGuide: NewYear2026HealthRoutineGuide;
+  evidenceNotes: string[];
+}
+
+export type NewYear2026FocusedPayload =
+  | NewYear2026StudyExamPayload
+  | NewYear2026LovePayload
+  | NewYear2026WealthBusinessPayload
+  | NewYear2026InvestmentPayload
+  | NewYear2026CareerPayload
+  | NewYear2026HealthPayload;
+
+export type NewYear2026ReportPayload = NewYear2026OverviewPayload | NewYear2026FocusedPayload;
+
 export interface SajuReportPayloadMap {
+  "saju-2026-overview": NewYear2026OverviewPayload;
+  "saju-2026-study-exam": NewYear2026StudyExamPayload;
+  "saju-2026-yearly-outlook": NewYear2026OverviewPayload;
+  "saju-love-focus": NewYear2026LovePayload;
+  "saju-2026-wealth-business": NewYear2026WealthBusinessPayload;
+  "saju-2026-investment-assets": NewYear2026InvestmentPayload;
+  "saju-2026-career-aptitude": NewYear2026CareerPayload;
+  "saju-2026-health-balance": NewYear2026HealthPayload;
   "saju-lifetime-roadmap": SajuLifetimeRoadmapPayload;
   "saju-daeun-shift": SajuDaeunShiftPayload;
   "saju-career-timing": SajuCareerTimingPayload;
@@ -170,7 +702,7 @@ export interface SajuReportPayloadMap {
   "saju-yearly-action-calendar": SajuYearlyActionCalendarPayload;
 }
 
-export type SajuReportPayload = SajuReportPayloadMap[SajuAnalysisServiceId];
+export type SajuReportPayload = SajuReportPayloadMap[SajuAnalysisServiceId | SajuNewYear2026ServiceId];
 
 export interface SectionAnalysis {
   title: string;
@@ -212,6 +744,15 @@ export interface SajuResult {
   consultationType?: string;
   reportTemplateVersion?: string;
   reportPayload?: SajuReportPayload;
+  
+  // -- V2 고도화 (전체 생성 + 항목별 잠금) --
+  reportPayloads?: Partial<Record<SajuServiceType, SajuReportPayload>>;
+  summaries?: Partial<Record<SajuServiceType, string>>;
+  sectionsMap?: Partial<Record<SajuServiceType, SectionAnalysis[]>>;
+  unlockedItems?: SajuServiceType[];
+  isLocked?: boolean;
+  // ----------------------------------------
+  
   lifetimeScore?: number;
   daeunPeriods?: DaeunPeriod[];
   goldenPeriods?: GoldenPeriod[];
@@ -269,8 +810,17 @@ export interface TraditionalSajuGeminiAnalysis extends GeminiAnalysis {
   reportPayload?: undefined;
 }
 
+export type NewYear2026SajuGeminiAnalysis = {
+  [K in SajuNewYear2026ServiceId]: GeminiAnalysis & {
+    serviceType: K;
+    reportTemplateVersion: string;
+    reportPayload: SajuReportPayloadMap[K];
+  };
+}[SajuNewYear2026ServiceId];
+
 export type SajuAnalysisResponse =
   | TraditionalSajuGeminiAnalysis
+  | NewYear2026SajuGeminiAnalysis
   | LifetimeRoadmapGeminiAnalysis
   | SpecializedSajuGeminiAnalysis;
 
@@ -336,6 +886,8 @@ export interface FortuneCategoryDetail {
   cautionPoint?: string;
 }
 
+export type FortuneCategoryId = "total" | "love" | "wealth" | "career" | "study" | "health";
+
 export interface FortuneResult {
   id?: string;
   baseResultId?: string;
@@ -348,14 +900,7 @@ export interface FortuneResult {
   luckyColor?: string;
   luckyItem?: string;
   sourceKind?: "personal" | QuickFortuneKind;
-  categories?: {
-    total?: FortuneCategoryDetail;
-    love?: FortuneCategoryDetail;
-    wealth?: FortuneCategoryDetail;
-    career?: FortuneCategoryDetail;
-    study?: FortuneCategoryDetail;
-    health?: FortuneCategoryDetail;
-  };
+  categories?: Partial<Record<FortuneCategoryId, FortuneCategoryDetail>>;
   luckyNumber?: number;
   healthTip?: string;
   createdAt?: string;
@@ -475,7 +1020,7 @@ export interface AstrologyAspect {
 
 export interface AstrologyResult {
   success: boolean;
-  data: any; // Fallback
+  data: Record<string, unknown>; // Fallback
   big3: {
     sun: AstrologyPlanet;
     moon: AstrologyPlanet;
@@ -517,7 +1062,24 @@ export interface AstrologyReportSummary {
   actionsNow: string[];
 }
 
-export type AstrologyReportChapterId = "personality" | "relationship" | "timing" | "future-flow";
+export type AstrologyLegacyReportChapterId =
+  | "personality"
+  | "relationship"
+  | "timing"
+  | "future-flow";
+
+export type AstrologyUserReportChapterId =
+  | "temperament"
+  | "love-relationship"
+  | "work-career"
+  | "money-wealth"
+  | "health-rhythm"
+  | "near-term-flow"
+  | "action-now";
+
+export type AstrologyReportChapterId =
+  | AstrologyLegacyReportChapterId
+  | AstrologyUserReportChapterId;
 
 export interface AstrologyReportChapter {
   id: AstrologyReportChapterId;
@@ -542,13 +1104,17 @@ export interface AstrologyReportTiming {
 }
 
 export interface AstrologyReportConfidence {
+  score: number;
+  level: "high" | "medium" | "low";
+  summary: string;
+  reasons: string[];
+  uncertainAreas: string[];
   birthTimeKnown: boolean;
-  level: "high" | "medium";
-  message: string;
+  message?: string; // legacy alias
 }
 
 export interface AstrologyDeepData {
-  data: any;
+  data: Record<string, unknown>;
   big3: AstrologyResult["big3"];
   planets: AstrologyPlanet[];
   houses: AstrologyHouse[];
@@ -559,17 +1125,151 @@ export interface AstrologyDeepData {
   chart_svg?: string;
 }
 
+export interface AstrologyPersonaPublicImageInsight {
+  title: string;
+  summary: string;
+  evidence: string[];
+  action: string;
+}
+
+export interface AstrologyStopHabitsInsight {
+  title: string;
+  habits: string[];
+  replacements: string[];
+}
+
+export interface AstrologyMoneyPathInsight {
+  title: string;
+  primaryPath: string;
+  secondaryPath: string;
+  blockers: string[];
+  firstAction: string;
+}
+
+export interface AstrologyExclusiveInsights {
+  personaPublicImage: AstrologyPersonaPublicImageInsight;
+  stopHabits: AstrologyStopHabitsInsight;
+  moneyPath: AstrologyMoneyPathInsight;
+}
+
+export interface AstrologyCuriosityLovePattern {
+  title: string;
+  attractionStyle: string;
+  emotionalNeed: string;
+  conflictTrigger: string;
+  healthierApproach: string;
+}
+
+export interface AstrologyCuriosityWorkPersona {
+  title: string;
+  bestRole: string;
+  collaborationStyle: string;
+  hiddenAdvantage: string;
+  burnoutTrigger: string;
+  growthAction: string;
+}
+
+export interface AstrologyCuriosityStressRecovery {
+  title: string;
+  trigger: string;
+  warningSignal: string;
+  resetRoutine: string;
+  boundaryRule: string;
+}
+
+export interface AstrologyCuriosityLuckRoutine {
+  title: string;
+  amplifier: string;
+  blocker: string;
+  ritual: string;
+  timingTip: string;
+}
+
+export interface AstrologyCuriosityFaqItem {
+  question: string;
+  answer: string;
+}
+
+export interface AstrologyCuriosityFaq {
+  title: string;
+  items: AstrologyCuriosityFaqItem[];
+}
+
+export interface AstrologyCuriosityInsights {
+  lovePattern: AstrologyCuriosityLovePattern;
+  workPersona: AstrologyCuriosityWorkPersona;
+  stressRecovery: AstrologyCuriosityStressRecovery;
+  luckRoutine: AstrologyCuriosityLuckRoutine;
+  faq: AstrologyCuriosityFaq;
+}
+
+export type AstrologyPopularQuestionId =
+  | "love"
+  | "work"
+  | "money"
+  | "recovery"
+  | "luck";
+
 export interface AstrologyBirthReportResult {
   success: boolean;
   generatedAt: string;
+  hero: {
+    headline: string;
+    topInsights: [string, string, string];
+  };
+  popularQuestions: Array<{
+    id: AstrologyPopularQuestionId;
+    question: string;
+    answer: string;
+  }>;
+  lifePatterns: Record<
+    "relationship" | "work" | "money" | "recovery",
+    {
+      pattern: string;
+      problemManifestation: string;
+      trigger: string;
+      recommendedAction: string;
+      basis?: string[];
+      isEstimated?: boolean;
+    }
+  >;
+  currentWindow: {
+    month: {
+      focus: string;
+      avoid: string;
+      routine: string;
+      basis: string[];
+      cacheKey: string;
+    };
+    quarter: {
+      focus: string;
+      avoid: string;
+      routine: string;
+      basis: string[];
+      cacheKey: string;
+    };
+  };
+  confidence: AstrologyReportConfidence;
+  deepData: AstrologyDeepData;
+  meta: {
+    templateVersion: "v4" | "v5";
+    timezone: string;
+    birthTimeKnown: boolean;
+    birthPrecision?: "known" | "unknown";
+    generatedFrom: "natal+transit";
+  };
+
+  // Legacy compatibility fields (v3 readers)
   summary: AstrologyReportSummary;
   chapters: AstrologyReportChapter[];
   timing: AstrologyReportTiming;
-  deepData: AstrologyDeepData;
-  confidence: AstrologyReportConfidence;
+  exclusiveInsights: AstrologyExclusiveInsights;
+  curiosityInsights: AstrologyCuriosityInsights;
 }
 
 export type AstrologyCalendarImpact = "high" | "medium" | "low";
+export type AstrologyCalendarChoiceGuideId = "career" | "relationship" | "energy" | "money";
+export type AstrologyCalendarPhase = "early" | "mid" | "late";
 
 export interface AstrologyCalendarSummary {
   headline: string;
@@ -583,30 +1283,51 @@ export interface AstrologyCalendarHighlight {
   note: string;
 }
 
-export interface AstrologyCalendarEvent {
-  date: string;
+export interface AstrologyCalendarChoiceGuide {
+  id: AstrologyCalendarChoiceGuideId;
   title: string;
-  impact: AstrologyCalendarImpact;
+  guidance: string;
+  recommendedAction: string;
+  avoidAction: string;
+}
+
+export interface AstrologyCalendarPhaseGuide {
+  phase: AstrologyCalendarPhase;
+  title: string;
   meaning: string;
   action: string;
+  impact: AstrologyCalendarImpact;
 }
 
-export interface AstrologyCalendarChapter {
-  id: "career" | "relationship" | "energy" | "money";
-  title: string;
-  interpretation: string;
-  actionGuide: string[];
-}
-
-export interface AstrologyCalendarChecklist {
-  do: string[];
-  dont: string[];
+export interface AstrologyCalendarExpertNote {
+  label: string;
+  plainMeaning: string;
+  sourceType: string;
 }
 
 export interface AstrologyCalendarDeepData {
   transits?: unknown[];
   sourceNotes: string[];
   rawReport?: string;
+  generationMode: "deterministic";
+  calculationBasis: "CircularNatalHoroscopeJS@1.1.0";
+  analysisWindow: {
+    year: number;
+    month: number;
+    daysAnalyzed: number;
+    transitTime: "12:00";
+    phaseBuckets: ["1-10", "11-20", "21-end"];
+  };
+  birthTimeAccuracy: "known" | "unknown";
+}
+
+export interface AstrologyCalendarUserContext {
+  sunSign: string;
+  moonSign: string;
+  risingSign: string;
+  dominantElement: string;
+  dominantQuality: string;
+  birthTimeKnown: boolean;
 }
 
 export interface AstrologyCalendarResult {
@@ -615,8 +1336,70 @@ export interface AstrologyCalendarResult {
   month: number;
   summary: AstrologyCalendarSummary;
   highlights: AstrologyCalendarHighlight[];
-  events: AstrologyCalendarEvent[];
-  chapters: AstrologyCalendarChapter[];
-  checklist: AstrologyCalendarChecklist;
+  priorityActions: string[];
+  choiceGuides: AstrologyCalendarChoiceGuide[];
+  phaseGuides: AstrologyCalendarPhaseGuide[];
+  avoidList: string[];
+  expertNotes: AstrologyCalendarExpertNote[];
+  userContext?: AstrologyCalendarUserContext;
   deepData?: AstrologyCalendarDeepData;
+}
+
+// ---------------------------------------------------------------------------
+// Chat (만세력 상담형 채팅)
+// ---------------------------------------------------------------------------
+
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: number;
+  tags?: string[];
+  suggestions?: string[];
+}
+
+export interface SajuChatContext {
+  name?: string;
+  palja: Palja;
+  oheng: OhengDistribution[];
+  yongsin?: Oheng[];
+  sinsal?: Sinsal[];
+  profileMeta: {
+    name?: string;
+    calendarType?: CalendarType;
+    birthYear: number;
+    birthMonth: number;
+    birthDay: number;
+    gender: Gender;
+    birthPrecision?: BirthPrecision;
+    timeBlock?: string;
+    hour?: number;
+    minute?: number;
+  };
+  currentYear: number;
+}
+
+export interface ChatRequest {
+  message: string;
+  conversationHistory: Pick<ChatMessage, "role" | "content">[];
+  sajuContext: SajuChatContext;
+  ownerKey: string;
+  profileKey: string;
+  usageId: string;
+  usageSource: "input" | "suggestion";
+  requestMeta?: {
+    traceId?: string;
+  };
+}
+
+export interface ChatResponse {
+  reply: string;
+  tags?: string[];
+  followUpSuggestions?: string[];
+  quota?: {
+    remaining: number;
+    total: number;
+    charged: boolean;
+    nextFreeResetAt?: string | null;
+  };
 }

@@ -1,5 +1,4 @@
 import React, { useRef, useEffect } from "react";
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface Tab {
@@ -34,11 +33,16 @@ export const CategoryTabs: React.FC<CategoryTabsProps> = ({
       const tabElement = activeTabRef.current;
       
       const scrollLeft = tabElement.offsetLeft - (scrollContainer.offsetWidth / 2) + (tabElement.offsetWidth / 2);
-      
-      scrollContainer.scrollTo({
-        left: scrollLeft,
-        behavior: "smooth"
-      });
+
+      if (typeof scrollContainer.scrollTo === "function") {
+        scrollContainer.scrollTo({
+          left: scrollLeft,
+          behavior: "smooth",
+        });
+        return;
+      }
+
+      scrollContainer.scrollLeft = scrollLeft;
     }
   }, [activeTabId]);
 
@@ -65,10 +69,9 @@ export const CategoryTabs: React.FC<CategoryTabsProps> = ({
             >
               {tab.label}
               {isActive && (
-                <motion.div 
-                  layoutId="activeTabIndicator"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900" 
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                <span
+                  className="absolute bottom-0 left-0 right-0 h-0.5 origin-center bg-gray-900 transition-transform duration-200 ease-out"
+                  style={{ transform: "scaleX(1)" }}
                 />
               )}
             </button>

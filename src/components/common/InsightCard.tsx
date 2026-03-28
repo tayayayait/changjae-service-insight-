@@ -4,7 +4,7 @@ import { Copy } from "lucide-react";
 
 interface InsightCardProps {
   label?: string;
-  title?: string;
+  title?: string | React.ReactNode;
   content: string | React.ReactNode;
   expandable?: boolean;
   expandedTitle?: string;

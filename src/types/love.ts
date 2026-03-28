@@ -11,9 +11,10 @@ export type LoveRelationMode =
   | "breakup"
   | "no-contact";
 
-export type LoveReportVersion = "v1-story" | "v2-counsel";
+export type LoveReportVersion = "v1-story" | "v2-counsel" | "v3-differentiated";
 export type LoveMenuVariant = LoveServiceType;
-export type LoveReportSectionType = "opening" | "self-pattern" | "dynamic" | "scenario" | "prescription" | "evidence";
+export type LoveReportLayout = "future-partner-v3" | "couple-report-v3" | "crush-reunion-v3";
+export type LoveV2SectionType = "opening" | "self-pattern" | "dynamic" | "scenario" | "prescription" | "evidence";
 
 export interface LoveContextAnswer {
   questionKey: string;
@@ -104,8 +105,117 @@ export interface LegacyLoveScoreSet {
 
 export type AnyLoveScoreSet = LoveScoreSet | LegacyLoveScoreSet;
 
+export interface PartnerProfile {
+  matchKeywords: string[];
+  avoidKeywords: string[];
+  idealDescription: string;
+}
+
+export interface LoveQuickCounsel {
+  diagnosis: string;
+  temperatureLabel: string;
+  temperatureText: string;
+  immediateAction: string;
+}
+
+export interface LoveScoreNarrative {
+  axis: keyof LoveScoreSet;
+  label: string;
+  score: number;
+  interpretation: string;
+  why: string;
+}
+
+export interface LoveActionRoadmap {
+  now: string[];
+  within7Days: string[];
+  within30Days: string[];
+}
+
 export interface LoveReportSection {
-  type: LoveReportSectionType;
+  id: string;
+  navLabel: string;
+  title: string;
+  coreQuestion: string;
+  summary?: string;
+  verdict: string;
+  analysisParagraphs: string[];
+  interpretationPoints: string[];
+  actionTitle: string;
+  actionItems: string[];
+  warningNote: string;
+}
+
+export interface LoveLockedSectionSummary {
+  id: string;
+  title: string;
+  teaser: string;
+  benefit: string;
+}
+
+export interface FuturePartnerInsights {
+  kind: "future-partner";
+  partnerProfile: PartnerProfile;
+  meetingChannels: string[];
+  greenFlags: string[];
+  redFlags: string[];
+  selfCheckCriteria: string[];
+}
+
+export interface CoupleReportInsights {
+  kind: "couple-report";
+  conflictTriggers: string[];
+  repairRituals: string[];
+  agreementChecklist: string[];
+  doNotSay: string[];
+  recoverySignals: string[];
+}
+
+export interface CrushReunionInsights {
+  kind: "crush-reunion";
+  chanceVerdict: "가능성 있음" | "제한적" | "확실한 정보 없음";
+  positiveSignals: string[];
+  blockingSignals: string[];
+  contactWindow: string;
+  stopLossRules: string[];
+  contactScripts: string[];
+}
+
+export type LoveServiceInsights = FuturePartnerInsights | CoupleReportInsights | CrushReunionInsights;
+
+export interface LoveReportPreviewV3 {
+  headline: string;
+  summary: string;
+  serviceType: LoveServiceType;
+  reportLayout: LoveReportLayout;
+  scoreSet: LoveScoreSet;
+  quickCounsel: LoveQuickCounsel;
+  previewHighlights: string[];
+  openSection: LoveReportSection;
+  lockedSectionSummaries: LoveLockedSectionSummary[];
+  ctaReason: string;
+  confidenceSummary: string;
+  nextRefreshAt: string;
+}
+
+export interface LoveReportFullV3 {
+  headline: string;
+  summary: string;
+  serviceType: LoveServiceType;
+  reportLayout: LoveReportLayout;
+  scoreSet: LoveScoreSet;
+  sections: LoveReportSection[];
+  scoreNarratives: LoveScoreNarrative[];
+  actionRoadmap: LoveActionRoadmap;
+  serviceInsights: LoveServiceInsights;
+  conversationPrompts: string[];
+  avoidList: string[];
+  confidenceNotes: string[];
+  nextRefreshAt: string;
+}
+
+export interface LoveReportSectionV2 {
+  type: LoveV2SectionType;
   title: string;
   question: string;
   summary: string;
@@ -116,14 +226,14 @@ export interface LoveReportSection {
   counselorNote: string;
 }
 
-export interface LoveLockedSectionSummary {
-  type: LoveReportSectionType;
+export interface LoveLockedSectionSummaryV2 {
+  type: LoveV2SectionType;
   title: string;
   teaser: string;
   benefit: string;
 }
 
-export interface LoveReportPreview {
+export interface LoveReportPreviewV2 {
   headline: string;
   summary: string;
   serviceType: LoveServiceType;
@@ -131,24 +241,26 @@ export interface LoveReportPreview {
   relationshipTemperature: string;
   immediateAction: string;
   scenarioHint: string;
-  openSection: LoveReportSection;
-  lockedSectionSummaries: LoveLockedSectionSummary[];
+  openSection: LoveReportSectionV2;
+  lockedSectionSummaries: LoveLockedSectionSummaryV2[];
   ctaReason: string;
   confidenceSummary: string;
   nextRefreshAt: string;
+  partnerProfile?: PartnerProfile;
 }
 
-export interface LoveReportFull {
+export interface LoveReportFullV2 {
   headline: string;
   summary: string;
   serviceType: LoveServiceType;
   scoreSet: LoveScoreSet;
-  sections: LoveReportSection[];
+  sections: LoveReportSectionV2[];
   actionPlan: string[];
   avoidList: string[];
   conversationPrompts: string[];
   confidenceNotes: string[];
   nextRefreshAt: string;
+  partnerProfile?: PartnerProfile;
 }
 
 export interface LegacyLoveStoryChapter {
@@ -187,6 +299,9 @@ export interface LegacyLoveReportFull {
   nextRefreshAt: string;
 }
 
+export type LoveReportPreview = LoveReportPreviewV3 | LoveReportPreviewV2;
+export type LoveReportFull = LoveReportFullV3 | LoveReportFullV2;
+
 export interface LoveReportRecord {
   id?: string;
   userId?: string;
@@ -209,6 +324,7 @@ export interface LoveReportRecord {
   unlockedAt?: string;
   nextRefreshAt: string;
   createdAt?: string;
+  dataSource?: "real" | "mock";
 }
 
 export interface LoveUnlockStatus {

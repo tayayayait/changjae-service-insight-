@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, Loader2, Sparkles, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,16 +10,39 @@ import { StepProgress } from "@/components/saju/StepProgress";
 import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/store/useAuthStore";
 import { normalizeTimeBlockId, TIME_BLOCKS } from "@/lib/timeBlocks";
+import {
+  DEFAULT_REGION_SELECTION,
+  REGION_SIDO_OPTIONS,
+  type RegionSido,
+} from "@/lib/koreanRegions";
 
 const TOTAL_STEPS = 4;
 
-const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> => {
+const hasCompleteBirthProfile = (profile: {
+  gender?: "male" | "female";
+  calendar_type?: "solar" | "lunar" | "lunar-leap";
+  year?: number;
+  month?: number;
+  day?: number;
+} | null) =>
+  Boolean(
+    profile &&
+      (profile.gender === "male" || profile.gender === "female") &&
+      (profile.calendar_type === "solar" ||
+        profile.calendar_type === "lunar" ||
+        profile.calendar_type === "lunar-leap") &&
+      typeof profile.year === "number" &&
+      typeof profile.month === "number" &&
+      typeof profile.day === "number",
+  );
+
+const withTimeout = async <T,>(promise: Promise<T> | PromiseLike<T>, timeoutMs: number, message: string): Promise<T> => {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   try {
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
     });
-    return await Promise.race([promise, timeoutPromise]);
+    return await Promise.race([promise as Promise<T>, timeoutPromise]);
   } finally {
     if (timeoutId) {
       clearTimeout(timeoutId);
@@ -29,7 +52,9 @@ const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number, message: 
 
 export default function ProfileSetup() {
   const navigate = useNavigate();
-  const { user, refreshProfile, initialized, isLoading } = useAuthStore();
+  const [searchParams] = useSearchParams();
+  const { user, hasProfile, profile, refreshProfile, initialized, isLoading } = useAuthStore();
+  const isProfileReadyForChat = hasCompleteBirthProfile(profile);
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [stepError, setStepError] = useState<string | null>(null);
@@ -44,13 +69,44 @@ export default function ProfileSetup() {
   const [birthPrecision, setBirthPrecision] = useState<"exact" | "time-block" | "unknown">("unknown");
   const [timeBlock, setTimeBlock] = useState<string>(TIME_BLOCKS[0].id);
   const [exactTime, setExactTime] = useState("");
-  const [location, setLocation] = useState("서울");
+  const [location, setLocation] = useState<RegionSido>(DEFAULT_REGION_SELECTION.sido);
+
+  const resolveSafeNextPath = () => {
+    const requestedNext = searchParams.get("next");
+    if (!requestedNext || !requestedNext.startsWith("/") || requestedNext.startsWith("//")) {
+      return null;
+    }
+    if (requestedNext === "/setup-profile") {
+      return "/chat";
+    }
+    return requestedNext;
+  };
+
+  const setupNextPath = resolveSafeNextPath();
+  const destinationAfterSetup = setupNextPath ?? "/mypage";
 
   useEffect(() => {
-    if (initialized && !user && !isLoading) {
-      navigate("/login");
+    if (initialized && !isLoading) {
+      if (!user) {
+        const selfPath = setupNextPath
+          ? `/setup-profile?next=${encodeURIComponent(setupNextPath)}`
+          : "/setup-profile";
+        navigate(`/login?next=${encodeURIComponent(selfPath)}`, { replace: true });
+      } else if (hasProfile && isProfileReadyForChat) {
+        // 이미 프로필이 있는 경우 접근 차단
+        navigate(destinationAfterSetup, { replace: true });
+      }
     }
-  }, [user, initialized, isLoading, navigate]);
+  }, [
+    destinationAfterSetup,
+    hasProfile,
+    initialized,
+    isLoading,
+    isProfileReadyForChat,
+    navigate,
+    setupNextPath,
+    user,
+  ]);
 
   const nextStep = () => {
     setStepError(null);
@@ -59,13 +115,9 @@ export default function ProfileSetup() {
     }
   };
 
-  const prevStep = () => {
+  const handleBackToHome = () => {
     setStepError(null);
-    if (step > 1) {
-      setStep((prev) => prev - 1);
-    } else {
-      navigate("/category/saju");
-    }
+    navigate("/", { replace: true });
   };
 
   const validateAndNext = () => {
@@ -167,7 +219,7 @@ export default function ProfileSetup() {
         title: "프로필 설정 완료",
         description: "이제 사주 서비스를 편리하게 이용하실 수 있습니다.",
       });
-      navigate("/");
+      navigate(destinationAfterSetup, { replace: true });
     } catch (error) {
       console.error("Profile setup failed:", error);
       toast({
@@ -304,7 +356,7 @@ export default function ProfileSetup() {
     <div className="space-y-8 py-4">
       <div className="space-y-3 text-center">
         <h2 className="text-[28px] font-extrabold tracking-tight text-foreground leading-tight">
-          태어난 시간을<br />입력해 주세요
+          태어난 시간과<br />지역을 입력해 주세요
         </h2>
         <p className="text-[16px] text-text-secondary">모르시면 '모름'을 선택해 주세요.</p>
       </div>
@@ -356,6 +408,25 @@ export default function ProfileSetup() {
             ))}
           </div>
         )}
+
+        <div className="space-y-2 pt-2">
+          <label htmlFor="birth-region" className="block text-[14px] font-bold text-foreground">
+            지역
+          </label>
+          <select
+            id="birth-region"
+            value={location}
+            onChange={(e) => setLocation(e.target.value as RegionSido)}
+            className="h-14 w-full rounded-2xl border-2 border-border bg-white px-4 font-bold focus:border-primary outline-none"
+          >
+            {REGION_SIDO_OPTIONS.map((sido) => (
+              <option key={sido} value={sido}>
+                {sido}
+              </option>
+            ))}
+          </select>
+          <p className="text-[12px] text-text-muted-val">시/도만 선택합니다.</p>
+        </div>
       </div>
     </div>
   );
@@ -372,7 +443,7 @@ export default function ProfileSetup() {
       <div className="mx-auto max-w-lg px-6 py-8 pb-32">
         <div className="mb-8">
           <button 
-            onClick={prevStep} 
+            onClick={handleBackToHome}
             className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-white text-foreground hover:bg-gray-50 transition-all mb-4 shadow-sm"
             aria-label="뒤로가기"
           >

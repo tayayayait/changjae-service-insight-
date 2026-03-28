@@ -27,6 +27,7 @@ import { ServiceDirectory } from "@/components/home/ServiceDirectory";
 import { TrustSection } from "@/components/home/TrustSection";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { HeroVideoBackground } from "@/components/home/HeroVideoBackground";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -142,7 +143,7 @@ const services = [
     title: "별자리 천궁도",
     description: "서양 점성술을 기반으로 당신의 행성 배치와 천궁도(Birth Chart)를 분석합니다.",
     to: "/astrology",
-    badge: "NEW",
+    badge: "신규",
     eta: "차트 즉시 생성",
     icon: Stars,
     accentClassName: "border-accent-coral bg-gradient-to-br from-accent-coral/35 via-white to-white",
@@ -324,17 +325,15 @@ export default function Index() {
   return (
     <AppLayout>
       <div className="relative overflow-hidden">
-        <div className="pointer-events-none absolute -left-20 top-8 h-56 w-56 rounded-full bg-accent-mint/40 blur-3xl" />
-        <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 rounded-full bg-accent-lavender/35 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-24 right-10 h-56 w-56 rounded-full bg-accent-coral/25 blur-3xl" />
-
-        <section className="mx-auto w-full max-w-[1280px] px-5 pb-6 pt-8 md:px-8 md:pt-10">
+        <HeroVideoBackground videoSrc="/videos/%ED%99%A9%EA%B8%88%EC%86%8C%EB%82%98%EB%AC%B4.mp4" />
+        
+        <section className="mx-auto w-full max-w-[1280px] px-5 pb-6 pt-8 md:px-8 md:pt-10 relative z-10">
           <motion.div
             initial="hidden"
             animate="visible"
             variants={fadeUp}
             custom={0}
-            className="portal-surface grid gap-6 overflow-hidden rounded-[32px] border border-border p-6 shadow-md md:p-8 lg:grid-cols-[1.1fr_0.9fr] lg:p-10"
+            className="portal-surface grid gap-6 overflow-hidden rounded-[32px] border border-white/20 bg-white/5 backdrop-blur-xl p-6 shadow-2xl md:p-8 lg:grid-cols-[1.1fr_0.9fr] lg:p-10"
           >
             <div className="space-y-5">
               <div className="inline-flex items-center gap-2 rounded-full border border-line-strong bg-bg-elevated/90 px-4 py-2 text-[12px] font-semibold text-text-secondary shadow-sm">
@@ -343,10 +342,10 @@ export default function Index() {
               </div>
 
               <div className="space-y-4">
-                <h1 className="max-w-[620px] text-[36px] font-extrabold leading-[44px] tracking-[-0.02em] text-foreground md:text-[42px] md:leading-[52px]">
+                <h1 className="max-w-[620px] text-[36px] font-extrabold leading-[44px] tracking-[-0.02em] text-white md:text-[42px] md:leading-[52px]">
                   {selectedCopy.title}
                 </h1>
-                <p className="max-w-[560px] text-body text-text-secondary">{selectedCopy.description}</p>
+                <p className="max-w-[560px] text-body text-white/80">{selectedCopy.description}</p>
               </div>
 
               <div className="flex flex-wrap gap-3">
@@ -365,7 +364,7 @@ export default function Index() {
                 {trustChips.map((chip) => (
                   <span
                     key={chip}
-                    className="inline-flex items-center rounded-full border border-border bg-bg-elevated/90 px-3 py-2 text-[12px] font-semibold text-text-secondary shadow-sm"
+                    className="inline-flex items-center rounded-full border border-white/20 bg-white/5 px-3 py-2 text-[12px] font-semibold text-white/90 shadow-sm backdrop-blur-md"
                   >
                     {chip}
                   </span>
@@ -373,7 +372,7 @@ export default function Index() {
               </div>
             </div>
 
-            <div className="relative min-h-[300px] rounded-[28px] border border-white/60 bg-gradient-to-br from-accent-lavender/45 via-white/70 to-accent-sky/35 p-5 shadow-sm md:min-h-[380px]">
+            <div className="relative min-h-[300px] rounded-[28px] border border-white/40 bg-white/10 p-5 shadow-inner backdrop-blur-md md:min-h-[380px]">
               <div className="hero-orbit absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full md:h-52 md:w-52" />
               <div className="absolute left-5 top-5 rounded-[20px] border border-white/70 bg-bg-elevated/90 p-4 shadow-sm">
                 <p className="text-[12px] font-semibold text-text-secondary">서비스 시작 가이드</p>

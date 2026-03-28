@@ -108,7 +108,7 @@ export const calculateGongmang = (dayGan: string, dayJi: string): string[] => {
   const jiIdx = JITS.indexOf(dJi);
   if (ganIdx === -1 || jiIdx === -1) return [];
 
-  let headJiIdx = (jiIdx - ganIdx + 12) % 12;
+  const headJiIdx = (jiIdx - ganIdx + 12) % 12;
   const gong1Idx = (headJiIdx + 10) % 12;
   const gong2Idx = (headJiIdx + 11) % 12;
 

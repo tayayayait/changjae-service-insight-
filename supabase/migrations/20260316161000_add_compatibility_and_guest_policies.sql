@@ -16,16 +16,12 @@ CREATE TABLE IF NOT EXISTS compatibility_results (
   advice TEXT NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
-
 CREATE INDEX IF NOT EXISTS idx_compatibility_results_user_id ON compatibility_results(user_id);
 CREATE INDEX IF NOT EXISTS idx_compatibility_results_guest_id ON compatibility_results(guest_id);
-
 ALTER TABLE compatibility_results ENABLE ROW LEVEL SECURITY;
-
 -- Replace permissive guest policies on saju_results
 DROP POLICY IF EXISTS "Anyone can insert saju_results" ON saju_results;
 DROP POLICY IF EXISTS "Users can view their own saju_results" ON saju_results;
-
 CREATE POLICY "Users can insert own saju_results"
   ON saju_results
   FOR INSERT
@@ -38,7 +34,6 @@ CREATE POLICY "Users can insert own saju_results"
       AND guest_id = (current_setting('request.headers', true)::jsonb ->> 'x-guest-id')
     )
   );
-
 CREATE POLICY "Users can view own saju_results"
   ON saju_results
   FOR SELECT
@@ -51,7 +46,6 @@ CREATE POLICY "Users can view own saju_results"
       AND guest_id = (current_setting('request.headers', true)::jsonb ->> 'x-guest-id')
     )
   );
-
 -- Compatibility policies
 CREATE POLICY "Users can insert own compatibility_results"
   ON compatibility_results
@@ -65,7 +59,6 @@ CREATE POLICY "Users can insert own compatibility_results"
       AND guest_id = (current_setting('request.headers', true)::jsonb ->> 'x-guest-id')
     )
   );
-
 CREATE POLICY "Users can view own compatibility_results"
   ON compatibility_results
   FOR SELECT

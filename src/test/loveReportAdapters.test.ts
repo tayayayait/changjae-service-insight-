@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+﻿import { describe, expect, it } from "vitest";
 import { inferLoveReportVersion, normalizeLegacyScoreSet } from "@/lib/loveReportAdapters";
 
 describe("loveReportAdapters", () => {
@@ -27,7 +27,7 @@ describe("loveReportAdapters", () => {
       inferLoveReportVersion({
         preview: {
           headline: "기존 리포트",
-          summary: "레거시 미리보기",
+          summary: "무료 미리보기",
           serviceType: "couple-report",
           scoreSet: {
             overall: 70,
@@ -39,13 +39,13 @@ describe("loveReportAdapters", () => {
           },
           openChapter: {
             key: "hook",
-            title: "한 줄 결론",
-            preview: "핵심 미리보기",
-            content: "레거시 상세",
-            actionTip: "대화를 늦추지 마세요.",
+            title: "핵심 결론",
+            preview: "무료 미리보기",
+            content: "기존 리포트 상세",
+            actionTip: "텍스트를 보지 마세요",
           },
           lockedChapters: [],
-          upsellCopy: "전체를 열어보세요.",
+          upsellCopy: "전체 흐름을 이어보세요",
           nextRefreshAt: "2026-04-18T00:00:00.000Z",
         },
       }),

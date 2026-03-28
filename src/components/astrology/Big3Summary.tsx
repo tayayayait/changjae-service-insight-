@@ -18,11 +18,18 @@ interface Big3SummaryProps {
 }
 
 export function Big3Summary({ big3 }: Big3SummaryProps) {
+  type Big3CardData = {
+    signKo: string;
+    element: string;
+    quality: string;
+    interpretation: string;
+  };
+
   // Helpers
   const renderCard = (
     title: string,
     icon: React.ReactNode,
-    data: any,
+    data: Big3CardData,
     colorClass: string,
     subText: string
   ) => (

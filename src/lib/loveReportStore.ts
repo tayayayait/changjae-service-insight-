@@ -160,6 +160,7 @@ export const createLoveReport = async (req: CreateLoveReportRequest): Promise<Lo
     inputSnapshot: req.inputSnapshot,
     featureSet: req.featureSet,
   });
+  created.dataSource = created.dataSource ?? "real";
   persistLocal(created);
   return created;
 };
@@ -185,13 +186,17 @@ export const unlockLoveReport = async (params: {
   id: string;
   productCode: string;
   amountKrw: number;
+  provider?: string;
+  providerOrderId?: string;
 }): Promise<LoveReportRecord> => {
   const unlocked = await invokeLove<LoveReportRecord>("unlock", {
     id: params.id,
     productCode: params.productCode,
     amountKrw: params.amountKrw,
-    provider: "mock",
+    provider: params.provider ?? "mock",
+    providerOrderId: params.providerOrderId,
   });
+  unlocked.dataSource = unlocked.dataSource ?? "real";
   persistLocal(unlocked);
   return unlocked;
 };

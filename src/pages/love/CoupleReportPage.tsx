@@ -1,6 +1,6 @@
 import { LoveReportPageBase } from "./LoveReportPageBase";
 
 export default function CoupleReportPage() {
-  return <LoveReportPageBase serviceType="couple-report" />;
+  return <LoveReportPageBase key="couple-report" serviceType="couple-report" />;
 }
 

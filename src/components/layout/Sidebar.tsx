@@ -1,195 +1,173 @@
 import React from "react";
-import { useNavigate, Link, useLocation } from "react-router-dom";
-import { 
-  Accordion, 
-  AccordionContent, 
-  AccordionItem, 
-  AccordionTrigger 
-} from "@/components/ui/accordion";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  Sparkles, 
-  MoonStar, 
-  Hand, 
-  Heart, 
-  Coins, 
-  Briefcase,
-  Users,
-  LogOut,
-  User as UserIcon
+import { Link, useLocation } from "react-router-dom";
+import {
+  ChevronDown,
+  FileText,
+  Heart,
+  Lightbulb,
+  MoonStar,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
-import { useAuthStore } from "@/store/useAuthStore";
+import { prefetchRoute } from "@/lib/routePrefetch";
+import { HOME_PATH, SIDEBAR_CATEGORY_GROUPS } from "@/data/mockData";
 
-const HOME_PATH = "/category/saju";
+const categoryIconMap: Record<string, React.ReactNode> = {
+  saju: <MoonStar className="h-5 w-5" />,
+  astrology: <Sparkles className="h-5 w-5" />,
+  love: <Heart className="h-5 w-5" />,
+};
 
-/**
- * 헬로우봇 스타일 라우팅 카테고리 정의
- */
-const CATEGORIES = [
-  {
-    title: "사주·만세력",
-    icon: <MoonStar className="w-5 h-5" />,
-    id: "saju",
-    items: [
-      { name: "인생 총운 (정통)", path: "/category/saju?tab=lifetime" },
-      { name: "2026 신년 운세", path: "/category/saju?tab=new-year" },
-      { name: "오늘의 운세", path: "/category/saju?tab=today" },
-    ]
-  },
-  {
-    title: "점성학·별자리",
-    icon: <Sparkles className="w-5 h-5 text-yellow-500" />,
-    id: "astrology",
-    items: [
-      { name: "네이탈 차트 (성격)", path: "/astrology" },
-      { name: "코스믹 이벤트", path: "/astrology/calendar" },
-      { name: "오늘의 별자리", path: "/astrology/daily" },
-    ]
-  },
-  {
-    title: "관상·손금",
-    icon: <Hand className="w-5 h-5" />,
-    id: "palmistry",
-    items: [
-      { name: "AI 손금 스캐너", path: "/category/palmistry?tab=palm" },
-    ]
-  },
-  {
-    title: "연애·궁합",
-    icon: <Heart className="w-5 h-5 text-pink-500" />,
-    id: "love",
-    items: [
-      { name: "미래 배우자", path: "/love/future-partner" },
-      { name: "커플 궁합", path: "/love/couple-report" },
-      { name: "짝사랑·재회", path: "/love/crush-reunion" },
-    ]
-  }
-];
+const getDefaultOpenIds = (pathname: string) =>
+  SIDEBAR_CATEGORY_GROUPS.filter((category) =>
+    category.items.some(
+      (item) =>
+        pathname === item.path || pathname.startsWith(`/category/${category.id}`),
+    ),
+  ).map((category) => category.id);
 
 export const Sidebar = () => {
   const location = useLocation();
-  const { user, signOut } = useAuthStore();
-  const navigate = useNavigate();
+  const [openCategoryIds, setOpenCategoryIds] = React.useState<string[]>(() => {
+    const initialOpen = getDefaultOpenIds(location.pathname);
+    return initialOpen.length > 0 ? initialOpen : [SIDEBAR_CATEGORY_GROUPS[0].id];
+  });
 
-  // 현재 열려있어야 하는 아코디언 찾기 (현재 경로 기반)
-  const defaultOpenIds = CATEGORIES.filter(cat => 
-    cat.items.some(item => location.pathname === item.path || location.pathname.startsWith(`/category/${cat.id}`))
-  ).map(cat => cat.id);
+  React.useEffect(() => {
+    const activeCategoryId = SIDEBAR_CATEGORY_GROUPS.find((category) =>
+      category.items.some((item) => location.pathname === item.path),
+    )?.id;
 
-  const handleAuthClick = () => {
-    if (user) {
-      navigate("/mypage");
-    } else {
-      navigate("/login");
+    if (!activeCategoryId) {
+      return;
     }
+
+    setOpenCategoryIds((prev) =>
+      prev.includes(activeCategoryId) ? prev : [...prev, activeCategoryId],
+    );
+  }, [location.pathname]);
+
+  const toggleCategory = (categoryId: string) => {
+    setOpenCategoryIds((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((value) => value !== categoryId)
+        : [...prev, categoryId],
+    );
   };
 
-  const handleSignOut = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    await signOut();
-    toast.success("로그아웃되었습니다.");
-    navigate(HOME_PATH);
+  const handlePrefetch = (path: string) => {
+    prefetchRoute(path);
   };
 
   return (
-    <div className="flex flex-col h-full bg-white shadow-sm pt-4">
-      <div className="px-6 mb-6">
-        {/* 서비스 로고 영역 */}
-        <Link to={HOME_PATH} className="flex items-center gap-2 font-bold text-xl text-gray-900 tracking-tight">
-          <span className="bg-primary/10 text-primary px-2 py-1 rounded-lg">창재</span>
-          운세 플랫폼
+    <div className="flex h-full flex-col border-r border-border bg-white pt-4 text-foreground shadow-sm">
+      <div className="mb-6 px-8">
+        <Link
+          to={HOME_PATH}
+          className="flex items-center gap-2 text-xl font-bold tracking-tight"
+          onMouseEnter={() => handlePrefetch(HOME_PATH)}
+          onFocus={() => handlePrefetch(HOME_PATH)}
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#24303F] text-[#C9A86A]">
+            <MoonStar className="h-5 w-5" />
+          </div>
+          <span className="text-xl font-bold tracking-tight text-[#24303F]">사주 인사이트</span>
         </Link>
       </div>
 
-      <ScrollArea className="flex-1 px-4">
-        <Accordion 
-          type="multiple" 
-          defaultValue={defaultOpenIds.length > 0 ? defaultOpenIds : [CATEGORIES[0].id]} 
-          className="w-full space-y-2"
-        >
-          {CATEGORIES.map((category) => (
-            <AccordionItem value={category.id} key={category.id} className="border-none">
-              <AccordionTrigger className="hover:bg-gray-50 px-3 py-3 rounded-xl transition-all data-[state=open]:bg-gray-50/50 hover:no-underline">
-                <div className="flex items-center gap-3 text-gray-700 font-medium">
-                  {category.icon}
-                  <span className="text-[15px]">{category.title}</span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pt-1 pb-2">
-                <div className="flex flex-col space-y-1 ml-9 border-l-2 border-gray-100 pl-4">
-                  {category.items.map((item) => {
-                    // 현재 선택된 서브메뉴 표시 로직
-                    const isActive = location.pathname + location.search === item.path || 
-                                    (location.pathname === item.path.split('?')[0] && !location.search && !item.path.includes('?'));
-                    return (
-                      <Link
-                        key={item.name}
-                        to={item.path}
-                        className={cn(
-                          "py-2 text-[14px] transition-colors rounded-md px-2",
-                          isActive 
-                            ? "text-primary font-semibold bg-primary/5" 
-                            : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
-                        )}
-                      >
-                        {item.name}
-                      </Link>
-                    );
-                  })}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </ScrollArea>
-      
-      {/* 헬로우봇처럼 하단에 로그인/유틸리티 영역 확보 */}
-      <div className="p-4 border-t border-gray-100 mt-auto space-y-2">
-         <Link 
-           to="/mypage" 
-           className={cn(
-             "flex items-center gap-3 w-full p-3 rounded-xl text-[14px] font-medium transition-all group",
-             location.pathname === "/mypage" 
-               ? "bg-primary text-white shadow-lg shadow-primary/20" 
-               : "bg-gray-50 text-gray-700 hover:bg-primary/5 hover:text-primary"
-           )}
-         >
-           <div className={cn(
-             "p-1.5 rounded-lg shadow-sm transition-all",
-             location.pathname === "/mypage" ? "bg-white/20 shadow-none" : "bg-white group-hover:shadow-md"
-           )}>
-             <UserIcon className={cn("w-4 h-4", location.pathname === "/mypage" ? "text-white" : "text-primary")} />
-           </div>
-           보관함
-         </Link>
+      <div className="flex-1 overflow-y-auto px-6 pb-6">
+        <div className="w-full space-y-2">
+          {SIDEBAR_CATEGORY_GROUPS.map((category) => {
+            const isOpen = openCategoryIds.includes(category.id);
 
-         {user ? (
-           <div className="flex items-center gap-2">
-             <div 
-               onClick={handleAuthClick}
-               className="flex-1 flex items-center gap-3 p-3 border border-gray-100 rounded-xl text-[14px] font-semibold text-gray-900 hover:bg-gray-50 cursor-pointer transition-colors shadow-sm active:scale-[0.98]"
-             >
-               <UserIcon className="w-4 h-4 text-gray-500" />
-               <span className="truncate">{user.email?.split('@')[0]}님</span>
-             </div>
-             <button 
-               onClick={handleSignOut}
-               className="p-3 border border-gray-100 rounded-xl hover:bg-red-50 hover:border-red-100 group transition-colors shadow-sm"
-               title="로그아웃"
-             >
-               <LogOut className="w-4 h-4 text-gray-400 group-hover:text-red-500 transition-colors" />
-             </button>
-           </div>
-         ) : (
-           <div 
-             onClick={handleAuthClick}
-             className="w-full p-3 border border-gray-100 rounded-xl text-center text-[14px] font-semibold text-gray-900 hover:bg-gray-50 cursor-pointer transition-colors shadow-sm active:scale-[0.98]"
-           >
-              로그인 / 회원가입
-           </div>
-         )}
+            return (
+              <section key={category.id} className="rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => toggleCategory(category.id)}
+                  className="flex w-full items-center justify-between rounded-xl px-3 py-3 transition-all hover:bg-[#FAF7F2]"
+                >
+                  <div className="flex items-center gap-3 font-medium text-text-secondary">
+                    {categoryIconMap[category.id]}
+                    <span className="text-[15px]">{category.title}</span>
+                  </div>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 text-text-secondary transition-transform",
+                      isOpen ? "rotate-180" : "rotate-0",
+                    )}
+                  />
+                </button>
+
+                {isOpen ? (
+                  <div className="ml-10 mt-1 flex flex-col space-y-1 border-l border-border pl-5">
+                    {category.items.map((item) => {
+                      const isActive =
+                        location.pathname + location.search === item.path ||
+                        (location.pathname === item.path.split("?")[0] &&
+                          !location.search &&
+                          !item.path.includes("?"));
+
+                      return (
+                        <Link
+                          key={item.name}
+                          to={item.path}
+                          onMouseEnter={() => handlePrefetch(item.path)}
+                          onFocus={() => handlePrefetch(item.path)}
+                          className={cn(
+                            "rounded-md px-2 py-2 text-[14px] transition-colors",
+                            isActive
+                              ? "bg-[#EAF1F7] font-bold text-[#24303F]"
+                              : "text-text-secondary hover:bg-[#FAF7F2] hover:text-foreground",
+                          )}
+                        >
+                          {item.name}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </section>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="mt-auto space-y-2 border-t border-border p-6">
+        <Link
+          to="/suggestions"
+          onMouseEnter={() => handlePrefetch("/suggestions")}
+          onFocus={() => handlePrefetch("/suggestions")}
+          className={cn(
+            "group flex w-full items-center gap-3 rounded-xl p-3 text-[14px] font-medium transition-all",
+            location.pathname === "/suggestions"
+              ? "bg-[#EAF1F7] text-foreground"
+              : "bg-white text-text-secondary hover:bg-[#FAF7F2] hover:text-foreground",
+          )}
+        >
+          <div className="rounded-lg bg-[#FAF7F2] p-1.5 transition-all group-hover:bg-[#EAF1F7]">
+            <Lightbulb className="h-4 w-4" />
+          </div>
+          의견 보내기
+        </Link>
+
+        <Link
+          to="/mypage"
+          onMouseEnter={() => handlePrefetch("/mypage")}
+          onFocus={() => handlePrefetch("/mypage")}
+          className={cn(
+            "group flex w-full items-center gap-3 rounded-xl p-3 text-[14px] font-medium transition-all",
+            location.pathname === "/mypage"
+              ? "bg-[#EAF1F7] text-foreground"
+              : "bg-white text-text-secondary hover:bg-[#FAF7F2] hover:text-foreground",
+          )}
+        >
+          <div className="rounded-lg bg-[#FAF7F2] p-1.5 transition-all group-hover:bg-[#EAF1F7]">
+            <FileText className="h-4 w-4" />
+          </div>
+          리포트 다시보기
+        </Link>
+
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { calculateSaju, parseTimeString, resolveBirthTime, resolveLongitude, resolveSolarBirthDate } from "@/lib/sajuEngine";
 import { UserBirthData } from "@/types/result";
 
@@ -29,8 +29,8 @@ describe("sajuEngine", () => {
   });
 
   it("resolves longitude for standardized region format", () => {
-    expect(resolveLongitude("서울특별시 강남구")).toBe(126.978);
-    expect(resolveLongitude("경상남도 창원시")).toBe(129.1);
+    expect(resolveLongitude("서울Ư별시 강남구")).toBe(126.978);
+    expect(resolveLongitude("경상남도 â원시")).toBe(129.1);
   });
 
   it("calculates saju payload using real library API", () => {

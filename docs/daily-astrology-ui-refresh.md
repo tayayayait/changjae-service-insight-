@@ -6,16 +6,24 @@
 
 ## 화면 구조
 - Hero 카드: 별자리 심볼 + 타이틀
+- 기준일 배지: `기준일 YYYY년 M월 D일 (요일) (KST)`를 상단 고정 노출
 - 결론 카드: `오늘 한 줄 결론`을 최상단 강조 영역으로 표시
 - 실행 카드 섹션: `지금 할 일 1개`, `오늘 피할 일 1개`를 분리 카드로 표시하고 체크 토글 제공
+- 즉시 실행 체크리스트: 바로 실행 가능한 3단계 목록(지금 10분, 집중 블록, 종료 점검) 노출
 - 활용 정보 섹션: `집중 시간대`, `관계 한 문장`, `컨디션 한 문장`을 아이콘 카드로 표현
 - 럭키 보조 섹션: `행운 컬러`, `행운 키워드`를 배지(chip)로 간결하게 노출
 - 안내 문구: 점성 데이터 연결 상태를 별도 안내 박스로 표시
+- 데이터 생성 근거 섹션:
+  - 기준일(`requestDate`)
+  - 응답 경로(`proxy/fallback/client_fallback`)
+  - 데이터 기준(`sign_context/rule_based/circular_natal_chart`)
+  - `CircularNatalHoroscopeJS` 기반 여부
 
 ## 렌더링 규칙
 - 결과 문자열을 마크다운 파서로 구조화(`flow`, `conclusion`, `doNow`, `avoid`, `focus`, `relation`, `condition`, `lucky`, `notice`)한다.
 - 구조 파싱 성공 시 카드 UI를 렌더링한다.
 - 구조 파싱 실패 시 기존 `ReactMarkdown` 렌더를 fallback으로 사용한다.
+- `체크리스트` 헤더를 실행 섹션으로 파싱한다.
 
 ## 테스트
 - `src/test/daily.astrology.page.test.tsx`

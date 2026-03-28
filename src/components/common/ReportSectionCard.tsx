@@ -67,14 +67,14 @@ export function ReportSectionCard({
               )}
 
               {/* Interpretation */}
-              <div className="text-[15px] text-gray-600 leading-[1.6]">
+              <div className="text-[15px] text-gray-600 leading-[1.8]">
                 <p className="whitespace-pre-line">{interpretation}</p>
               </div>
 
               {/* Advice Box */}
               <div className="bg-gray-50 rounded-xl p-4 flex gap-3 border border-gray-100">
                 <Lightbulb className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                <p className="text-[14px] text-gray-700 leading-relaxed">
+                <p className="text-[14px] text-gray-700 leading-[1.8]">
                   {advice}
                 </p>
               </div>

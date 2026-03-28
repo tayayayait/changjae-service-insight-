@@ -31,7 +31,7 @@ const buildRequest = (): CreateLoveReportRequest =>
         day: 29,
         gender: "female",
         birthPrecision: "unknown",
-        location: "서울",
+        location: "?쒖슱",
       },
       context: {},
     },

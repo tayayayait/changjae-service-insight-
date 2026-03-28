@@ -1,0 +1,38 @@
+[
+  {
+    "file": "src\\hooks\\saju\\useSajuAnalysisFlow.ts",
+    "garbledLines": 14,
+    "examples": [
+      {
+        "line": 33,
+        "text": "\"saju-lifetime-roadmap\": \"?몄깮 ?④퀎 蹂?붿? ?꾧컻 ?쒖궗瑜?以묒떖?쇰줈 ?묒꽦?섏꽭??\","
+      },
+      {
+        "line": 34,
+        "text": "\"saju-daeun-shift\": \"?꾪솚 吏뺥썑쨌蹂???ъ씤?맞룹?鍮??됰룞???꾪솚 ???쒖젏/?꾨줈 遺꾨━?섏꽭??\","
+      },
+      {
+        "line": 35,
+        "text": "\"saju-career-timing\": \"寃곗젙???쇨낵 蹂대쪟???쇱쓣 遺꾨━?섍퀬 ?ㅽ뻾 ?먮떒 湲곗???紐낇솗???섏꽭??\","
+      }
+    ]
+  },
+  {
+    "file": "supabase\\functions\\_shared\\prompt-templates.ts",
+    "garbledLines": 22,
+    "examples": [
+      {
+        "line": 1317,
+        "text": "\"details\": \"?ㅻ뒛 ?먮쫫??????곸꽭 ?댁꽍\","
+      },
+      {
+        "line": 1321,
+        "text": "\"healthTip\": \"吏㏃? ?ㅽ듃?덉묶?쇰줈 湲댁옣????댁＜?몄슂.\","
+      },
+      {
+        "line": 1327,
+        "text": "\"advice\": \"?됰룞 議곗뼵\","
+      }
+    ]
+  }
+]

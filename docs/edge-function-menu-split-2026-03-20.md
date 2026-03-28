@@ -1,59 +1,57 @@
-# Edge Function 메뉴 1:1 분리 적용 (2026-03-20)
+# Edge Function Canonical 운영 기준 (2026-03-20)
 
-## 변경 요약
-- 메뉴 기준 분리 원칙을 적용해 신규 Edge Function 엔드포인트를 추가했다.
-- 기존 함수는 코어로 유지하고, 신규 함수는 래퍼(프록시) 방식으로 연결했다.
-- 레거시 기능은 즉시 삭제하지 않고 Soft-Deprecate 정책으로 운영한다.
+## 목적
+- `supabase/functions`를 메뉴/도메인 기준 Canonical 함수만 유지하도록 정리한다.
+- 하나의 함수에 다기능을 몰아넣던 구조를 제거해 배포/디버깅 리스크를 낮춘다.
+- 이번 기준에서는 레거시 함수도 소스에서 제거하고 Canonical만 재배포한다.
 
-## 신규 함수 매핑
-- `saju-lifetime-api` -> `analyze-saju`
-- `saju-daily-api` -> `daily-fortune`
-- `saju-yearly-api` -> `yearly-fortune`
-- `astrology-natal-api` -> `astrology-api` (`birth/birth_report/synastry/transit/ai_*`)
-- `astrology-cosmic-api` -> `astrology-api` (`ai_calendar`)
-- `astrology-daily-api` -> `astrology-api` (`today`)
-- `palmistry-scanner-api` -> `astrology-api` (`palm_analyze/ai_palm_qa`)
-- `love-future-partner-api` -> `love-reports` (`create`, serviceType 강제)
-- `love-couple-report-api` -> `love-reports` (`create`, serviceType 강제)
-- `love-crush-reunion-api` -> `love-reports` (`create`, serviceType 강제)
-- `love-reports-center` -> `love-reports` (`create/get_preview/unlock/list/delete`)
+## 최종 유지 함수 (Canonical)
+- `secure-results`
+- `saju-lifetime-api`
+- `saju-daily-api`
+- `saju-yearly-api`
+- `astrology-daily-api`
+- `astrology-cosmic-api`
+- `astrology-natal-api`
+- `palmistry-scanner-api`
+- `love-future-partner-api`
+- `love-couple-report-api`
+- `love-crush-reunion-api`
+- `love-reports-center`
 
-## 프론트 호출 변경
-- `src/lib/astrologyClient.ts`:
-  - action별 함수명을 분리했다.
-  - `today`는 `astrology-daily-api`, 손금은 `palmistry-scanner-api`로 호출한다.
-- `src/lib/geminiClient.ts`:
-  - 사주 호출을 `saju-lifetime-api`, `saju-daily-api`, `saju-yearly-api`로 전환했다.
-  - 연간 운세 `months` 정렬을 `1월 -> 12월` 오름차순으로 강제했다.
-- `src/lib/loveReportStore.ts`:
-  - `create`는 서비스 타입별 함수로 분기한다.
-  - 나머지 액션은 `love-reports-center`를 사용한다.
+## 제거 대상 함수
+- `analyze-saju`
+- `daily-fortune`
+- `yearly-fortune`
+- `astrology-api`
+- `love-reports`
+- `palmistry-vision-api`
+- `analyze-compatibility`
+- `zodiac-fortune`
+- `star-sign-fortune`
+- `dream-interpretation`
+- `good-day-calendar`
 
-## 레거시 라우트 처리
-- `/compatibility` -> `/love/couple-report`
-- `/astrology/synastry` -> `/love/couple-report`
-- `/fortune/quick` -> `/category/saju?tab=today`
-- `/fortune/good-days` -> `/astrology/calendar`
-- `/fortune/dream` -> `/category/saju?tab=today`
+## config.toml 기준
+- `[functions.*]` 블록은 Canonical 12개만 남긴다.
+- 제거 대상 함수 블록은 모두 삭제한다.
 
-위 경로는 즉시 차단하지 않고 안내 메시지 후 리다이렉트한다.
-
-## 배포 대상 함수
+## 배포 순서
 ```bash
-supabase functions deploy saju-lifetime-api --no-verify-jwt
-supabase functions deploy saju-daily-api --no-verify-jwt
-supabase functions deploy saju-yearly-api --no-verify-jwt
-supabase functions deploy astrology-natal-api --no-verify-jwt
-supabase functions deploy astrology-cosmic-api --no-verify-jwt
-supabase functions deploy astrology-daily-api --no-verify-jwt
-supabase functions deploy palmistry-scanner-api --no-verify-jwt
-supabase functions deploy love-future-partner-api --no-verify-jwt
-supabase functions deploy love-couple-report-api --no-verify-jwt
-supabase functions deploy love-crush-reunion-api --no-verify-jwt
-supabase functions deploy love-reports-center --no-verify-jwt
+npx supabase functions deploy saju-lifetime-api --no-verify-jwt --project-ref wyotcagrklohprtaarqa
+npx supabase functions deploy saju-daily-api --no-verify-jwt --project-ref wyotcagrklohprtaarqa
+npx supabase functions deploy saju-yearly-api --no-verify-jwt --project-ref wyotcagrklohprtaarqa
+npx supabase functions deploy astrology-daily-api --no-verify-jwt --project-ref wyotcagrklohprtaarqa
+npx supabase functions deploy astrology-cosmic-api --no-verify-jwt --project-ref wyotcagrklohprtaarqa
+npx supabase functions deploy astrology-natal-api --no-verify-jwt --project-ref wyotcagrklohprtaarqa
+npx supabase functions deploy palmistry-scanner-api --no-verify-jwt --project-ref wyotcagrklohprtaarqa
+npx supabase functions deploy love-future-partner-api --no-verify-jwt --project-ref wyotcagrklohprtaarqa
+npx supabase functions deploy love-couple-report-api --no-verify-jwt --project-ref wyotcagrklohprtaarqa
+npx supabase functions deploy love-crush-reunion-api --no-verify-jwt --project-ref wyotcagrklohprtaarqa
+npx supabase functions deploy love-reports-center --no-verify-jwt --project-ref wyotcagrklohprtaarqa
+npx supabase functions deploy secure-results --no-verify-jwt --project-ref wyotcagrklohprtaarqa
 ```
 
-## 유지/정리 정책
-- 즉시 유지(코어): `analyze-saju`, `daily-fortune`, `yearly-fortune`, `astrology-api`, `love-reports`, `secure-results`
-- Soft-Deprecate: `zodiac-fortune`, `star-sign-fortune`, `good-day-calendar`, `dream-interpretation`, `analyze-compatibility`
-- 하드 삭제는 트래픽/로그 확인 후 별도 배치에서 진행한다.
+## 비고
+- `/fortune/quick`, `/fortune/good-days`, `/fortune/dream`, `/compatibility`는 앱 라우터에서 LegacyRedirect로 우회된다.
+- 프론트 메인 동선은 Canonical 함수만 사용한다.

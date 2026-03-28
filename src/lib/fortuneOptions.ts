@@ -2,8 +2,6 @@ import { GoodDayEventType } from "@/types/result";
 
 export const FORTUNE_PERIOD_OPTIONS = [
   { label: "오늘", value: "today" },
-  { label: "주간", value: "week" },
-  { label: "월간", value: "month" },
 ] as const;
 
 export const ZODIAC_OPTIONS = ["쥐", "소", "호랑이", "토끼", "용", "뱀", "말", "양", "원숭이", "닭", "개", "돼지"] as const;

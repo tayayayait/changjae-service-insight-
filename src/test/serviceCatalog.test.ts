@@ -54,13 +54,38 @@ describe("serviceCatalog", () => {
     expect(fallback.map((item) => item.id)).toEqual(LIFETIME_SERVICE_ORDER.slice(0, 3));
   });
 
-  it("keeps astrology service routes for daily/synastry/calendar stable", () => {
+  it("keeps only 3 visible astrology services and preserves stable routes", () => {
     const astrologyCards = getCategoryServiceCards("astrology");
     const routeMap = Object.fromEntries(astrologyCards.map((item) => [item.id, item.to]));
 
+    expect(astrologyCards.map((item) => item.id)).toEqual([
+      "astro-natal",
+      "astro-daily",
+      "astro-cosmic-calendar",
+    ]);
     expect(routeMap["astro-daily"]).toBe("/astrology/daily");
-    expect(routeMap["astro-synastry"]).toBe("/astrology/synastry");
     expect(routeMap["astro-cosmic-calendar"]).toBe("/astrology/calendar");
+    expect(routeMap["astro-synastry"]).toBeUndefined();
+  });
+
+  it("routes 3 core love services through /service intro and keeps love detail handoff", () => {
+    const loveCards = getCategoryServiceCards("love").filter((item) =>
+      ["love-future-partner", "love-couple-report", "love-crush-reunion"].includes(item.id),
+    );
+
+    expect(loveCards.map((item) => item.id)).toEqual([
+      "love-future-partner",
+      "love-couple-report",
+      "love-crush-reunion",
+    ]);
+
+    for (const card of loveCards) {
+      expect(card.to).toBe(`/service/${card.id}`);
+      const landing = getServiceLandingById(card.id);
+      expect(landing).not.toBeNull();
+      expect(landing?.nextPath.startsWith("/love/")).toBe(true);
+      expect(landing?.previewFeatures?.length).toBeGreaterThanOrEqual(2);
+    }
   });
 
   it("keeps palm service IDs while routing to canonical main sections", () => {
@@ -71,5 +96,61 @@ describe("serviceCatalog", () => {
     expect(mainLanding?.nextPath).toBe("/palmistry?mode=main&section=wealth-career");
     expect(timingLanding?.id).toBe("palm-destiny-change");
     expect(timingLanding?.nextPath).toBe("/palmistry?mode=main&section=timing");
+  });
+
+  it("keeps 2026 tile analysis services disjoint from lifetime services", () => {
+    const dedicated2026ServiceIds = [
+      "saju-2026-overview",
+      "saju-2026-study-exam",
+      "saju-love-focus",
+      "saju-2026-wealth-business",
+      "saju-2026-investment-assets",
+      "saju-2026-career-aptitude",
+      "saju-2026-health-balance",
+    ] as const;
+
+    const analysisServiceIds = dedicated2026ServiceIds.map((serviceId) => getServiceLandingById(serviceId)?.analysisServiceId);
+    const nextPaths = dedicated2026ServiceIds.map((serviceId) => getServiceLandingById(serviceId)?.nextPath);
+
+    expect(analysisServiceIds.every(Boolean)).toBe(true);
+    expect(new Set(analysisServiceIds).size).toBe(dedicated2026ServiceIds.length);
+    expect(analysisServiceIds).toEqual(dedicated2026ServiceIds);
+    expect(nextPaths.every((nextPath) => nextPath?.startsWith("/saju?mode=new-year-2026"))).toBe(true);
+
+    for (const analysisServiceId of analysisServiceIds) {
+      expect(LIFETIME_SERVICE_ORDER).not.toContain(analysisServiceId as (typeof LIFETIME_SERVICE_ORDER)[number]);
+    }
+  });
+
+  it("marks the wealth-business service as business-owner only before entry", () => {
+    const wealthCard = getCategoryServiceCards("saju").find((item) => item.id === "saju-2026-wealth-business");
+    const wealthLanding = getServiceLandingById("saju-2026-wealth-business");
+
+    expect(wealthCard?.title).toBe("2026 사업자 재물/사업운");
+    expect(wealthCard?.description).toContain("사업 운영자 기준");
+    expect(wealthLanding?.audienceBadge).toBe("사업자 전용");
+    expect(wealthLanding?.audienceNotice).toContain("직접 매출, 비용, 운영 책임");
+  });
+
+  it("keeps yearly-outlook landing resolvable for legacy links", () => {
+    const legacyLanding = getServiceLandingById("saju-2026-yearly-outlook");
+    expect(legacyLanding?.id).toBe("saju-2026-yearly-outlook");
+    expect(legacyLanding?.nextPath).toBe("/saju?mode=new-year-2026&focus=yearly-outlook");
+  });
+});
+
+describe("serviceCatalog filtering", () => {
+  it("filters out items with hideFromGrid: true from category cards", () => {
+    const sajuCards = getCategoryServiceCards("saju");
+    const sajuIds = sajuCards.map((card) => card.id);
+
+    expect(sajuIds).not.toContain("saju-ai-chat");
+    expect(sajuIds).toContain("saju-lifetime-roadmap");
+  });
+
+  it("still allows resolving hidden services by ID for landing data", () => {
+    const landing = getServiceLandingById("saju-ai-chat");
+    expect(landing).not.toBeNull();
+    expect(landing?.id).toBe("saju-ai-chat");
   });
 });

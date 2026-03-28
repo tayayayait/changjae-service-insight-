@@ -36,6 +36,8 @@ export function FortuneDetailCard({
   isExpanded,
   onToggle
 }: FortuneDetailCardProps) {
+  const SafeIcon = Icon ?? Sparkles;
+
   return (
     <motion.div
       layout
@@ -51,7 +53,7 @@ export function FortuneDetailCard({
       <div className="p-5 flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className={cn("flex items-center justify-center w-12 h-12 rounded-[18px]", bgClass, colorClass)}>
-            <Icon className="w-6 h-6" />
+            <SafeIcon className="w-6 h-6" />
           </div>
           <div>
             <span className={cn("text-[12px] font-bold uppercase tracking-wider", colorClass)}>{subtitle}</span>
@@ -71,7 +73,7 @@ export function FortuneDetailCard({
             transition={{ duration: 0.3 }}
             className="overflow-hidden"
           >
-            <div className="px-5 pb-6 space-y-4">
+            <div className="px-5 pb-6 space-y-5">
               
               {/* Summary */}
               <p className="text-[15px] font-bold text-gray-800 leading-relaxed border-b border-gray-100 pb-3">
@@ -79,7 +81,7 @@ export function FortuneDetailCard({
               </p>
 
               {/* Detail */}
-              <p className="text-[14px] text-gray-600 leading-relaxed">
+              <p className="text-[14px] text-gray-600 leading-[1.8]">
                 {detail}
               </p>
 
@@ -88,7 +90,7 @@ export function FortuneDetailCard({
                 {/* Advice Area */}
                 <div className="bg-gray-50 rounded-[16px] p-4 border border-gray-100">
                   <span className="block text-[12px] font-bold text-gray-500 mb-1">💡 실용 조언</span>
-                  <p className="text-[13px] text-gray-700 leading-relaxed">{advice}</p>
+                  <p className="text-[13px] text-gray-700 leading-[1.8]">{advice}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">

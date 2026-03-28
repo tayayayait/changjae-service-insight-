@@ -1,4 +1,4 @@
-import { create } from "zustand";
+﻿import { create } from "zustand";
 import { UserBirthData, SajuResult, AstrologyResult, FortuneResult } from "../types/result";
 
 export type ServiceType = "saju" | "astrology" | "palmistry" | "compatibility" | "love";
@@ -19,12 +19,16 @@ interface ConsultState {
   sajuResult: SajuResult | null;
   astroResult: AstrologyResult | null;
   fortuneResult: FortuneResult | null;
-  palmResult: any | null; // 손금은 전용 타입 추후 보강
+  palmResult: unknown | null; // 손금은 전용 타입 추후 보강
   
   // 에러 메시지
   error: string | null;
 
+  // 배경 프로젝트 ID (글로벌 배경 제어용)
+  unicornProjectId: string | null;
+
   // Actions
+  setUnicornProjectId: (id: string | null) => void;
   setService: (type: ServiceType, id: string) => void;
   updateProfile: (data: Partial<UserBirthData> & { name?: string }) => void;
   setStep: (step: number) => void;
@@ -47,10 +51,17 @@ export const useConsultStore = create<ConsultState>((set) => ({
   fortuneResult: null,
   palmResult: null,
   error: null,
+  unicornProjectId: null,
+
+  setUnicornProjectId: (id) => set((state) => {
+    if (state.unicornProjectId === id) return state;
+    return { unicornProjectId: id };
+  }),
 
   setService: (type, id) => set({ 
     currentService: type, 
     serviceId: id,
+    userProfile: {}, // 서비스 전환 시 기존 입력 정보 초기화 (독립성 보장)
     step: 1, 
     isAnalyzing: false,
     error: null 
@@ -75,6 +86,7 @@ export const useConsultStore = create<ConsultState>((set) => ({
   reset: () => set({
     currentService: null,
     serviceId: null,
+    userProfile: {}, // 사용자 정보도 함께 초기화
     step: 1,
     isAnalyzing: false,
     sajuResult: null,

@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>React 작업 전 사전 점검 보고서</title>
+    <style>
+      :root {
+        --bg: #f5f7fb;
+        --card: #ffffff;
+        --text: #0f172a;
+        --muted: #475569;
+        --line: #dbe4f0;
+        --accent: #0b5fff;
+        --warn: #b54708;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, #eef3ff 0%, var(--bg) 45%);
+        color: var(--text);
+        font-family: "Segoe UI", "Noto Sans KR", Arial, sans-serif;
+        line-height: 1.55;
+      }
+      main {
+        max-width: 980px;
+        margin: 40px auto;
+        padding: 0 20px 40px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 16px;
+      }
+      h1, h2 {
+        margin: 0 0 12px;
+        line-height: 1.25;
+      }
+      h1 { font-size: 1.8rem; }
+      h2 { font-size: 1.2rem; }
+      p { margin: 0 0 10px; }
+      .meta {
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .badge {
+        display: inline-block;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        padding: 4px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: #f8fbff;
+        color: var(--accent);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8px;
+      }
+      th, td {
+        border: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+        padding: 10px;
+      }
+      th {
+        background: #f8fbff;
+        font-size: 0.92rem;
+      }
+      code {
+        background: #f2f6ff;
+        border: 1px solid #dbe4ff;
+        border-radius: 6px;
+        padding: 1px 6px;
+      }
+      .warn {
+        color: var(--warn);
+        font-weight: 600;
+      }
+      .checklist li {
+        margin: 8px 0;
+      }
+      footer {
+        margin-top: 12px;
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+      @media (max-width: 760px) {
+        .grid { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="card">
+        <h1>React/Vite 작업 전 사전 점검 보고서</h1>
+        <p class="meta">작성일: 2026-03-24 (Asia/Seoul)</p>
+        <p class="meta">기준: <strong>Vercel React Best Practices</strong> (우선순위 8개 카테고리)</p>
+      </section>
+
+      <section class="card">
+        <h2>1. 현재 상태(확인된 팩트)</h2>
+        <div class="grid">
+          <p><span class="badge">앱 구조</span><br />Vite + React 18 + TypeScript</p>
+          <p><span class="badge">테스트</span><br />Vitest (<code>test</code> 스크립트 존재)</p>
+          <p><span class="badge">린트</span><br />ESLint (<code>lint</code> 스크립트 존재)</p>
+          <p><span class="badge">Next.js 사용</span><br />코드/의존성 기준 직접 사용 흔적 없음</p>
+        </div>
+        <p class="warn">주의: Next.js 전용 규칙(server-*, 일부 rendering-*)은 현재 구조에서 직접 적용 범위가 제한됩니다.</p>
+      </section>
+
+      <section class="card">
+        <h2>2. 작업 전 필수 체크리스트</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>우선순위</th>
+              <th>점검 항목</th>
+              <th>실행 방법</th>
+              <th>완료 기준</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>P0</td>
+              <td>의존성 동기화</td>
+              <td><code>pnpm install</code></td>
+              <td>설치 에러 0건</td>
+            </tr>
+            <tr>
+              <td>P0</td>
+              <td>기준선 품질 확인</td>
+              <td><code>pnpm lint</code>, <code>npm test</code></td>
+              <td>린트/테스트 실패 0건</td>
+            </tr>
+            <tr>
+              <td>P0</td>
+              <td>비동기 워터폴 탐지 (<code>async-*</code>)</td>
+              <td>순차 <code>await</code> 구간 식별 후 병렬화 후보 목록 작성</td>
+              <td>병렬화 대상 목록 확정</td>
+            </tr>
+            <tr>
+              <td>P1</td>
+              <td>번들 최적화 후보 식별 (<code>bundle-*</code>)</td>
+              <td>무거운 UI/차트/애니메이션 모듈의 지연 로딩 후보 정의</td>
+              <td>동적 import 적용 대상 확정</td>
+            </tr>
+            <tr>
+              <td>P1</td>
+              <td>클라이언트 데이터 패턴 점검 (<code>client-*</code>)</td>
+              <td>중복 fetch, 전역 이벤트 리스너, 로컬스토리지 스키마 점검</td>
+              <td>중복 요청/리스너 제거 계획 작성</td>
+            </tr>
+            <tr>
+              <td>P2</td>
+              <td>재렌더/렌더링 비용 점검 (<code>rerender-*</code>, <code>rendering-*</code>)</td>
+              <td>불필요한 상태 구독, 인라인 컴포넌트, 과도한 memo 사용 확인</td>
+              <td>수정 우선순위 리스트 확정</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h2>3. 적용 제외/제한 항목</h2>
+        <ul class="checklist">
+          <li>Next.js 전용 API 또는 App Router 관련 항목: 현재 구조 기준 직접 적용 불가.</li>
+          <li>서버 액션 인증(<code>server-auth-actions</code>) 등 서버 프레임워크 종속 규칙: 현재 리포지토리의 프런트엔드 범위에서는 제한적.</li>
+          <li>추가 서버 구조 확인 전, 서버 전용 성능 규칙의 효과를 단정할 수 없음.</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>4. 착수 게이트(승인 조건)</h2>
+        <ul class="checklist">
+          <li><input type="checkbox" /> 기준선 테스트(<code>npm test</code>) 통과</li>
+          <li><input type="checkbox" /> 린트(<code>pnpm lint</code>) 통과</li>
+          <li><input type="checkbox" /> 워터폴/번들 최적화 후보 목록 작성 완료</li>
+          <li><input type="checkbox" /> 변경 대상 문서(<code>docs/</code>) 업데이트 계획 확정</li>
+        </ul>
+      </section>
+
+      <footer>
+        본 보고서는 작업 착수 전 체크리스트 용도이며, 성능 수치 자체는 별도 측정 결과가 필요합니다.
+      </footer>
+    </main>
+  </body>
+</html>

@@ -27,7 +27,7 @@ describe("astrologyClient today action", () => {
         success: true,
         data: {
           sign: "Cancer",
-          horoscope: "재시도 후 정상 응답",
+          horoscope: "실시간 정상 응답",
         },
       },
       error: null,
@@ -35,36 +35,32 @@ describe("astrologyClient today action", () => {
 
     const promise = getSunSignHoroscope("Cancer");
 
-    await vi.advanceTimersByTimeAsync(10_000);
-    await vi.advanceTimersByTimeAsync(300);
+    await vi.advanceTimersByTimeAsync(15_000);
+    await vi.advanceTimersByTimeAsync(800);
 
     const response = await promise;
-    expect(response.data.horoscope).toBe("재시도 후 정상 응답");
+    expect(response.data.horoscope).toBe("실시간 정상 응답");
     expect(invokeMock).toHaveBeenCalledTimes(2);
   });
 
-  it("returns client fallback when both attempts time out", async () => {
+  it("throws when all attempts time out", async () => {
     vi.useFakeTimers();
     invokeMock.mockImplementation(() => new Promise(() => {}));
 
     const promise = getSunSignHoroscope("Cancer");
+    const assertion = expect(promise).rejects.toThrow("실시간 운세");
 
-    await vi.advanceTimersByTimeAsync(10_000);
-    await vi.advanceTimersByTimeAsync(300);
-    await vi.advanceTimersByTimeAsync(10_000);
+    await vi.advanceTimersByTimeAsync(15_000);
+    await vi.advanceTimersByTimeAsync(800);
+    await vi.advanceTimersByTimeAsync(15_000);
+    await vi.advanceTimersByTimeAsync(800);
+    await vi.advanceTimersByTimeAsync(15_000);
 
-    const response = await promise;
-
-    expect(response.success).toBe(true);
-    expect(response.meta).toEqual({
-      source: "client_fallback",
-      reason: "client_timeout",
-    });
-    expect(response.data.horoscope).toContain("게자리 오늘의 흐름");
-    expect(invokeMock).toHaveBeenCalledTimes(2);
+    await assertion;
+    expect(invokeMock).toHaveBeenCalledTimes(3);
   });
 
-  it("returns client fallback when server payload is empty", async () => {
+  it("throws when server payload is empty", async () => {
     invokeMock.mockResolvedValueOnce({
       data: {
         success: true,
@@ -76,26 +72,37 @@ describe("astrologyClient today action", () => {
       error: null,
     });
 
-    const response = await getSunSignHoroscope("Cancer");
-
-    expect(response.meta).toEqual({
-      source: "client_fallback",
-      reason: "response_empty",
-    });
-    expect(response.data.horoscope).toContain("게자리 오늘의 흐름");
+    await expect(getSunSignHoroscope("Cancer")).rejects.toThrow("실시간 운세");
+    expect(invokeMock).toHaveBeenCalledTimes(1);
   });
 
-  it("returns normalized horoscope payload and keeps server meta", async () => {
+  it("rejects fallback source payload and retries", async () => {
     invokeMock.mockResolvedValueOnce({
       data: {
         success: true,
         data: {
           sign: "Cancer",
-          horoscope: "  오늘은 집중이 필요합니다.  ",
+          horoscope: "첫 시도 보정 응답",
         },
         meta: {
           source: "fallback",
           reason: "upstream_timeout",
+        },
+      },
+      error: null,
+    });
+
+    invokeMock.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: {
+          sign: "Cancer",
+          horoscope: "두 번째 시도 실시간 응답",
+        },
+        meta: {
+          source: "proxy",
+          basis: "sign_context",
+          requestDate: "2026-03-21",
         },
       },
       error: null,
@@ -107,48 +114,101 @@ describe("astrologyClient today action", () => {
       success: true,
       data: {
         sign: "Cancer",
-        horoscope: "오늘은 집중이 필요합니다.",
+        horoscope: "두 번째 시도 실시간 응답",
       },
       meta: {
-        source: "fallback",
-        reason: "upstream_timeout",
+        source: "proxy",
+        basis: "sign_context",
+        requestDate: "2026-03-21",
       },
     });
-    expect(invokeMock).toHaveBeenCalledWith(
-      "astrology-daily-api",
-      expect.objectContaining({
-        body: expect.objectContaining({
-          action: "today",
-          payload: { sign: "Cancer" },
-        }),
-      }),
-    );
+    expect(invokeMock).toHaveBeenCalledTimes(2);
   });
 
-  it("replaces known low-quality fallback sentence with localized report", async () => {
+  it("allows sign_context basis even when profile context exists", async () => {
     invokeMock.mockResolvedValueOnce({
       data: {
         success: true,
         data: {
           sign: "Cancer",
-          horoscope: "Today is strongest when you keep one priority clear and avoid unnecessary expansion.",
+          horoscope: "실시간 응답(별자리 컨텍스트)",
+        },
+        meta: {
+          source: "proxy",
+          basis: "sign_context",
+          requestDate: "2026-03-21",
         },
       },
       error: null,
     });
 
-    const response = await getSunSignHoroscope("Cancer");
-
-    expect(response.data.horoscope).toContain("게자리 오늘의 흐름");
-    expect(response.data.horoscope).toContain("### 오늘 한 줄 결론");
-    expect(response.data.horoscope).toContain("기본 리포트로 보정");
-    expect(response.data.horoscope).not.toContain("### 실행 포인트");
-    expect(response.meta).toEqual({
-      source: "client_fallback",
-      reason: "response_invalid",
+    const response = await getSunSignHoroscope("Cancer", {
+      requestDate: "2026-03-21",
+      profile: {
+        year: 1991,
+        month: 7,
+        day: 10,
+        hour: 9,
+        minute: 30,
+        location: "서울",
+        tz: "Asia/Seoul",
+        birthTimeKnown: true,
+      },
     });
-    expect(response.data.horoscope).not.toBe(
-      "Today is strongest when you keep one priority clear and avoid unnecessary expansion.",
+
+    expect(response.meta).toEqual(
+      expect.objectContaining({
+        source: "proxy",
+        basis: "sign_context",
+      }),
+    );
+    expect(invokeMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("sends only requestDate in today payload even when profile context is provided", async () => {
+    invokeMock.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: {
+          sign: "Cancer",
+          horoscope: "실시간 응답(별자리 컨텍스트)",
+        },
+        meta: {
+          source: "proxy",
+          basis: "sign_context",
+          requestDate: "2026-03-21",
+        },
+      },
+      error: null,
+    });
+
+    await getSunSignHoroscope("Cancer", {
+      requestDate: "2026-03-21",
+      profile: {
+        year: 1991,
+        month: 7,
+        day: 10,
+        hour: 9,
+        minute: 30,
+        location: "서울",
+        tz: "Asia/Seoul",
+        birthTimeKnown: true,
+      },
+    });
+
+    expect(invokeMock).toHaveBeenCalledWith(
+      "astrology-daily-api",
+      expect.objectContaining({
+        body: expect.objectContaining({
+          action: "today",
+          payload: {
+            sign: "Cancer",
+            context: {
+              requestDate: "2026-03-21",
+            },
+          },
+        }),
+      }),
     );
   });
 });

@@ -42,7 +42,7 @@ export function HomeServiceCard({
           <div className="flex flex-col items-end gap-1.5">
             <span className={cn(
               "rounded-full px-2.5 py-1 text-[10px] font-bold shadow-sm ring-1 ring-black/[0.05]",
-              badge === "BEST" ? "bg-primary text-white" : "bg-bg-elevated/90 text-text-secondary"
+              badge === "BEST" || badge === "베스트" ? "bg-primary text-white" : "bg-bg-elevated/90 text-text-secondary"
             )}>
               {badge}
             </span>

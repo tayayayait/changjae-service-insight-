@@ -17,8 +17,6 @@ interface QuickFortuneInputCardProps {
 
 const PERIOD_OPTIONS: Array<{ label: string; value: AnalysisPeriod }> = [
   { label: "오늘", value: "today" },
-  { label: "주간", value: "week" },
-  { label: "월간", value: "month" },
 ];
 
 export function QuickFortuneInputCard({

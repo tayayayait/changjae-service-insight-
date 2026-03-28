@@ -38,7 +38,7 @@ describe("astrologyClient birth_report action", () => {
 
     const assertion = expect(promise).rejects.toThrow("리포트 생성이 지연되고 있습니다.");
 
-    await vi.advanceTimersByTimeAsync(25_000);
+    await vi.advanceTimersByTimeAsync(55_000);
     await assertion;
   });
 });

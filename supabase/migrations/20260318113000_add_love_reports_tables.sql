@@ -20,18 +20,14 @@ CREATE TABLE IF NOT EXISTS love_reports (
   next_refresh_at TIMESTAMPTZ NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
-
 CREATE INDEX IF NOT EXISTS idx_love_reports_user_id ON love_reports(user_id);
 CREATE INDEX IF NOT EXISTS idx_love_reports_guest_id ON love_reports(guest_id);
 CREATE INDEX IF NOT EXISTS idx_love_reports_service_type ON love_reports(service_type);
 CREATE INDEX IF NOT EXISTS idx_love_reports_next_refresh_at ON love_reports(next_refresh_at);
-
 ALTER TABLE love_reports ENABLE ROW LEVEL SECURITY;
-
 DROP POLICY IF EXISTS "Users can insert own love_reports" ON love_reports;
 DROP POLICY IF EXISTS "Users can view own love_reports" ON love_reports;
 DROP POLICY IF EXISTS "Users can delete own love_reports" ON love_reports;
-
 CREATE POLICY "Users can insert own love_reports"
   ON love_reports
   FOR INSERT
@@ -44,7 +40,6 @@ CREATE POLICY "Users can insert own love_reports"
       AND guest_id = (current_setting('request.headers', true)::jsonb ->> 'x-guest-id')
     )
   );
-
 CREATE POLICY "Users can view own love_reports"
   ON love_reports
   FOR SELECT
@@ -57,7 +52,6 @@ CREATE POLICY "Users can view own love_reports"
       AND guest_id = (current_setting('request.headers', true)::jsonb ->> 'x-guest-id')
     )
   );
-
 CREATE POLICY "Users can delete own love_reports"
   ON love_reports
   FOR DELETE
@@ -70,7 +64,6 @@ CREATE POLICY "Users can delete own love_reports"
       AND guest_id = (current_setting('request.headers', true)::jsonb ->> 'x-guest-id')
     )
   );
-
 -- Entitlement/order boundary for v1 (mock provider)
 
 CREATE TABLE IF NOT EXISTS love_report_orders (
@@ -87,16 +80,12 @@ CREATE TABLE IF NOT EXISTS love_report_orders (
   refunded_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
-
 CREATE INDEX IF NOT EXISTS idx_love_report_orders_report_id ON love_report_orders(report_id);
 CREATE INDEX IF NOT EXISTS idx_love_report_orders_user_id ON love_report_orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_love_report_orders_guest_id ON love_report_orders(guest_id);
-
 ALTER TABLE love_report_orders ENABLE ROW LEVEL SECURITY;
-
 DROP POLICY IF EXISTS "Users can insert own love_report_orders" ON love_report_orders;
 DROP POLICY IF EXISTS "Users can view own love_report_orders" ON love_report_orders;
-
 CREATE POLICY "Users can insert own love_report_orders"
   ON love_report_orders
   FOR INSERT
@@ -109,7 +98,6 @@ CREATE POLICY "Users can insert own love_report_orders"
       AND guest_id = (current_setting('request.headers', true)::jsonb ->> 'x-guest-id')
     )
   );
-
 CREATE POLICY "Users can view own love_report_orders"
   ON love_report_orders
   FOR SELECT
@@ -122,4 +110,3 @@ CREATE POLICY "Users can view own love_report_orders"
       AND guest_id = (current_setting('request.headers', true)::jsonb ->> 'x-guest-id')
     )
   );
-

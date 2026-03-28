@@ -1,8 +1,10 @@
-﻿import { isSupabaseConfigured, supabase } from "./supabase";
+import { isSupabaseConfigured, supabase } from "./supabase";
 
 export type AnalyticsEventName =
   | "input_started"
+  | "analysis_cache_hit"
   | "analysis_completed"
+  | "analysis_failed"
   | "share_clicked"
   | "save_clicked"
   | "auth_converted"
@@ -48,3 +50,5 @@ export const trackEvent = async (name: AnalyticsEventName, props?: Record<string
     // Ignore analytics failures to keep UX stable.
   }
 };
+
+

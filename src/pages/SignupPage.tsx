@@ -8,6 +8,21 @@ import { Label } from "@/components/ui/label";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { toast } from "sonner";
 
+const POST_SIGNUP_NEXT_PATH = "/chat";
+
+const isRedirectValidationError = (error: unknown) => {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const maybeAuthError = error as { status?: number; message?: string };
+  const message = typeof maybeAuthError.message === "string" ? maybeAuthError.message.toLowerCase() : "";
+  return (
+    maybeAuthError.status === 422 &&
+    (message.includes("redirect") || message.includes("redirect_to"))
+  );
+};
+
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,20 +38,36 @@ export default function SignupPage() {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      const emailRedirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(POST_SIGNUP_NEXT_PATH)}`;
+
+      let signupResult = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/login`,
+          emailRedirectTo,
         },
       });
 
-      if (error) throw error;
+      if (signupResult.error && isRedirectValidationError(signupResult.error)) {
+        console.warn(
+          "signUp emailRedirectTo rejected by Supabase allow-list, retrying without emailRedirectTo.",
+          signupResult.error.message,
+        );
+        signupResult = await supabase.auth.signUp({
+          email,
+          password,
+        });
+      }
 
-      toast.success("회원가입이 완료되었습니다! 이메일 인증을 확인해주세요.");
-      navigate("/login");
-    } catch (error: any) {
-      toast.error(error.message || "회원가입 중 오류가 발생했습니다.");
+      if (signupResult.error) throw signupResult.error;
+
+      // Email verification is now enforced. 
+      // Supabase will return session: null if "Confirm Email" is enabled.
+      // We always redirect to the verification information page to ensure the user knows they need to verify.
+      toast.success("회원가입이 완료되었습니다. 이메일을 확인해주세요.");
+      navigate("/verify-email", { replace: true });
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "회원가입 중 오류가 발생했습니다.");
     } finally {
       setIsLoading(false);
     }

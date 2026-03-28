@@ -12,7 +12,7 @@ describe("loveFeatureEngine", () => {
       day: 2,
       timeBlock: "모름",
       birthPrecision: "unknown",
-      location: "서울",
+      location: "?쒖슱",
       gender: "female",
     };
     const subjectB: LoveSubjectInput = {
@@ -23,7 +23,7 @@ describe("loveFeatureEngine", () => {
       hour: 14,
       minute: 30,
       birthPrecision: "exact",
-      location: "서울",
+      location: "?쒖슱",
       gender: "male",
     };
 
@@ -50,7 +50,7 @@ describe("loveFeatureEngine", () => {
       hour: 9,
       minute: 0,
       birthPrecision: "exact",
-      location: "서울",
+      location: "?쒖슱",
       gender: "male",
     };
 
@@ -67,5 +67,38 @@ describe("loveFeatureEngine", () => {
     expect(score.alignment).toBeGreaterThanOrEqual(0);
     expect(score.repair).toBeGreaterThanOrEqual(0);
     expect(score.timing).toBeGreaterThanOrEqual(20);
+  });
+
+  it("applies context bonus correctly for couple-report", () => {
+    const subjectA: LoveSubjectInput = {
+      calendarType: "solar",
+      year: 1990,
+      month: 3,
+      day: 8,
+      birthPrecision: "unknown",
+      gender: "male",
+    };
+
+    const feature = extractLoveFeatureSet({
+      subjectA,
+      sajuA: calculateSaju(subjectA),
+    });
+
+    const baseScore = calculateLoveScoreSet("couple-report", feature);
+    
+    // Testing case: trust -> alignment+5, repair+4
+    // conflict_relief -> repair+5
+    // frequent_clash -> repair+4, pull-3
+    const contextScore = calculateLoveScoreSet("couple-report", feature, {
+      contextAnswers: [
+        { questionKey: "main_concern", answerKey: "trust", questionLabel: "", answerLabel: "" },
+        { questionKey: "couple_outcome", answerKey: "conflict_relief", questionLabel: "", answerLabel: "" },
+        { questionKey: "relationship_temperature", answerKey: "frequent_clash", questionLabel: "", answerLabel: "" }
+      ]
+    });
+
+    expect(contextScore.alignment).toBeGreaterThan(baseScore.alignment);
+    expect(contextScore.repair).toBeGreaterThan(baseScore.repair);
+    expect(contextScore.pull).toBeLessThanOrEqual(baseScore.pull);
   });
 });

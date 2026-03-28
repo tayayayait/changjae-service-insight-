@@ -1,232 +1,400 @@
-import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Calendar as CalendarIcon, Loader2, MoonStar, RefreshCw } from "lucide-react";
 import { AnalysisPageShell } from "@/components/layout/AnalysisPageShell";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
-import { getAstrologyAICalendar } from "@/lib/astrologyClient";
-import { AstrologyCalendarEvent, AstrologyCalendarResult } from "@/types/result";
+import { useCosmicCalendarFlow } from "@/hooks/astrology/useCosmicCalendarFlow";
+import { AstrologyRequest } from "@/types/result";
 
-const impactBadgeClassMap: Record<AstrologyCalendarEvent["impact"], string> = {
-  high: "bg-rose-100 text-rose-800 border-rose-200",
-  medium: "bg-amber-100 text-amber-800 border-amber-200",
-  low: "bg-slate-100 text-slate-700 border-slate-200",
+type LocationOption = {
+  id: string;
+  label: string;
+  lat: number;
+  lng: number;
+  tz: string;
 };
 
-const impactLabelMap: Record<AstrologyCalendarEvent["impact"], string> = {
-  high: "강도 높음",
-  medium: "중간 강도",
-  low: "완만",
+const impactLabelMap = {
+  high: "강함",
+  medium: "보통",
+  low: "약함",
+} as const;
+
+const phaseLabelMap = {
+  early: "초반",
+  mid: "중반",
+  late: "후반",
+} as const;
+
+const LOCATION_OPTIONS: LocationOption[] = [
+  { id: "seoul", label: "서울", lat: 37.5665, lng: 126.978, tz: "Asia/Seoul" },
+  { id: "busan", label: "부산", lat: 35.1796, lng: 129.0756, tz: "Asia/Seoul" },
+  { id: "daegu", label: "대구", lat: 35.8714, lng: 128.6014, tz: "Asia/Seoul" },
+  { id: "incheon", label: "인천", lat: 37.4563, lng: 126.7052, tz: "Asia/Seoul" },
+  { id: "gwangju", label: "광주", lat: 35.1595, lng: 126.8526, tz: "Asia/Seoul" },
+  { id: "daejeon", label: "대전", lat: 36.3504, lng: 127.3845, tz: "Asia/Seoul" },
+  { id: "ulsan", label: "울산", lat: 35.5384, lng: 129.3114, tz: "Asia/Seoul" },
+  { id: "jeju", label: "제주", lat: 33.4996, lng: 126.5312, tz: "Asia/Seoul" },
+];
+
+const formatMonthHeading = (year: number, month: number) =>
+  `${year}년 ${month}월 운세 예측 가이드`;
+
+const parseBirthDate = (value: string) => {
+  const [year, month, day] = value.split("-").map(Number);
+  if (!year || !month || !day) {
+    return null;
+  }
+  return { year, month, day };
 };
 
-const formatMonthHeading = (year: number, month: number) => `${year}년 ${month}월 코스믹 캘린더`;
-
-const sectionMotion = {
-  initial: { opacity: 0, y: 10 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -8 },
+const parseBirthTime = (value: string) => {
+  const [hour, minute] = value.split(":").map(Number);
+  if (!Number.isInteger(hour) || !Number.isInteger(minute)) {
+    return null;
+  }
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+    return null;
+  }
+  return { hour, minute };
 };
 
 export default function CosmicCalendarPage() {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [calendarData, setCalendarData] = useState<AstrologyCalendarResult | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const {
+    year,
+    month,
+    calendarData,
+    isLoading,
+    fetchError,
+    hasSubmittedProfile,
+    orderedPhaseGuides,
+    profileBannerText,
+    fetchCalendar,
+  } = useCosmicCalendarFlow();
 
-  const fetchCalendar = async (year: number, month: number) => {
-    try {
-      setIsLoading(true);
-      const result = await getAstrologyAICalendar(year, month);
-      setCalendarData(result);
-    } catch (error) {
-      toast({
-        title: "캘린더 생성 실패",
-        description: error instanceof Error ? error.message : "코스믹 캘린더를 불러오지 못했습니다.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [name, setName] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [birthTimeKnown, setBirthTimeKnown] = useState(false);
+  const [birthTime, setBirthTime] = useState("");
+  const [locationId, setLocationId] = useState("");
+  const [inputError, setInputError] = useState<string | null>(null);
+  const monthKey = `${year}-${month}`;
+  const prevMonthKeyRef = useRef(monthKey);
 
   useEffect(() => {
-    fetchCalendar(currentDate.getFullYear(), currentDate.getMonth() + 1);
-  }, [currentDate]);
+    if (prevMonthKeyRef.current === monthKey) {
+      return;
+    }
 
-  const handlePrevMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+    prevMonthKeyRef.current = monthKey;
+    setName("");
+    setBirthDate("");
+    setBirthTimeKnown(false);
+    setBirthTime("");
+    setLocationId("");
+    setInputError(null);
+  }, [monthKey]);
+
+  const isFormValid = useMemo(() => {
+    if (!name.trim() || !birthDate || !locationId) {
+      return false;
+    }
+    if (birthTimeKnown && !birthTime) {
+      return false;
+    }
+    return true;
+  }, [birthDate, birthTime, birthTimeKnown, locationId, name]);
+
+  const handleRunCalendar = async () => {
+    setInputError(null);
+
+    const selectedLocation = LOCATION_OPTIONS.find((item) => item.id === locationId);
+    if (!selectedLocation) {
+      setInputError("출생지를 선택해 주세요.");
+      return;
+    }
+
+    const parsedDate = parseBirthDate(birthDate);
+    if (!parsedDate) {
+      setInputError("생년월일 형식이 올바르지 않습니다.");
+      return;
+    }
+
+    const parsedTime = birthTimeKnown ? parseBirthTime(birthTime) : { hour: 12, minute: 0 };
+    if (!parsedTime) {
+      setInputError("출생 시간 형식이 올바르지 않습니다.");
+      return;
+    }
+
+    const profileRequest: AstrologyRequest = {
+      name: name.trim(),
+      year: parsedDate.year,
+      month: parsedDate.month,
+      day: parsedDate.day,
+      hour: parsedTime.hour,
+      minute: parsedTime.minute,
+      lat: selectedLocation.lat,
+      lng: selectedLocation.lng,
+      tz_str: selectedLocation.tz,
+      birthTimeKnown,
+    };
+
+    await fetchCalendar(year, month, profileRequest);
   };
-
-  const handleNextMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
-  };
-
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth() + 1;
 
   return (
     <AnalysisPageShell
-      title="코스믹 캘린더"
-      subtitle="핵심 요약 -> 핵심 구간 -> 날짜 이벤트 -> 행동 체크리스트 순서로 읽는 월간 리포트"
+      categoryId="astrology"
+      title="운세 예보"
+      subtitle="이번 달의 행성 에너지 흐름과 행동 우선순위를 정리합니다."
+      themeColor="accent-sky"
+      icon={MoonStar}
     >
-      <div className="mx-auto max-w-6xl px-4 pb-20">
-        <div className="mb-6 flex items-center justify-between rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm">
-          <Button onClick={handlePrevMonth} variant="outline" className="h-10 w-10 rounded-full p-0" aria-label="이전 달">
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <h2 className="flex items-center gap-2 text-xl font-black text-slate-900 md:text-2xl">
-            <CalendarIcon className="h-5 w-5 text-blue-600 md:h-6 md:w-6" />
-            {formatMonthHeading(year, month)}
-          </h2>
-          <Button onClick={handleNextMonth} variant="outline" className="h-10 w-10 rounded-full p-0" aria-label="다음 달">
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+      <div className="mx-auto max-w-5xl space-y-6 pb-16">
+        <Card className="rounded-3xl border-[#24303F]/10 bg-white">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-xl text-[#24303F]">
+              <CalendarIcon className="h-5 w-5 text-[#C9A86A]" />
+              {formatMonthHeading(year, month)}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-slate-700">
+              운세 예보는 이 화면에서 직접 입력한 정보로만 실행됩니다. 다른 서비스의 생년월일/개인정보는 자동 연동되지 않습니다.
+            </p>
 
-        <AnimatePresence mode="wait">
-          {isLoading ? (
-            <motion.section key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <Card className="rounded-2xl border-slate-200">
-                <CardContent className="flex flex-col items-center justify-center py-20">
-                  <Loader2 className="mb-3 h-8 w-8 animate-spin text-blue-600" />
-                  <p className="text-sm font-semibold text-slate-600">월간 흐름을 계산하고 있습니다.</p>
-                </CardContent>
-              </Card>
-            </motion.section>
-          ) : null}
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="space-y-1.5">
+                <label htmlFor="cosmic-name" className="text-xs font-semibold text-slate-600">이름</label>
+                <input
+                  id="cosmic-name"
+                  aria-label="cosmic-name-input"
+                  type="text"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#C9A86A]/40"
+                  placeholder="본인 이름"
+                />
+              </div>
 
-          {!isLoading && calendarData ? (
-            <motion.section key="content" {...sectionMotion} transition={{ duration: 0.2 }} className="space-y-6">
-              <Card className="overflow-hidden rounded-2xl border-slate-200">
-                <div className="bg-gradient-to-r from-blue-700 via-indigo-600 to-cyan-600 px-6 py-5 text-white">
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-100">Monthly Summary</p>
-                  <h3 className="mt-2 text-xl font-black leading-tight md:text-2xl">{calendarData.summary.headline}</h3>
-                  <p className="mt-3 text-sm text-blue-50">{calendarData.summary.focus}</p>
-                  <p className="mt-2 text-sm text-blue-100/90">주의: {calendarData.summary.caution}</p>
+              <div className="space-y-1.5">
+                <label htmlFor="cosmic-birth-date" className="text-xs font-semibold text-slate-600">생년월일</label>
+                <input
+                  id="cosmic-birth-date"
+                  aria-label="cosmic-birth-date-input"
+                  type="date"
+                  value={birthDate}
+                  onChange={(event) => setBirthDate(event.target.value)}
+                  className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#C9A86A]/40"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="cosmic-location" className="text-xs font-semibold text-slate-600">출생지</label>
+                <select
+                  id="cosmic-location"
+                  aria-label="cosmic-location-select"
+                  value={locationId}
+                  onChange={(event) => setLocationId(event.target.value)}
+                  className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#C9A86A]/40"
+                >
+                  <option value="">출생지 선택</option>
+                  {LOCATION_OPTIONS.map((location) => (
+                    <option key={location.id} value={location.id}>
+                      {location.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="cosmic-birth-time" className="text-xs font-semibold text-slate-600">출생 시간</label>
+                  <label className="flex items-center gap-2 text-xs font-semibold text-slate-600">
+                    <input
+                      aria-label="cosmic-birth-time-known-toggle"
+                      type="checkbox"
+                      checked={birthTimeKnown}
+                      onChange={(event) => {
+                        setBirthTimeKnown(event.target.checked);
+                        if (!event.target.checked) {
+                          setBirthTime("");
+                        }
+                      }}
+                    />
+                    시간 알고 있음
+                  </label>
                 </div>
-              </Card>
+                <input
+                  id="cosmic-birth-time"
+                  aria-label="cosmic-birth-time-input"
+                  type="time"
+                  value={birthTime}
+                  onChange={(event) => setBirthTime(event.target.value)}
+                  disabled={!birthTimeKnown}
+                  className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm disabled:cursor-not-allowed disabled:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-[#C9A86A]/40"
+                />
+              </div>
+            </div>
 
-              <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                {calendarData.highlights.map((highlight) => (
-                  <Card key={highlight.title} className="rounded-2xl border-slate-200">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base font-bold text-slate-900">{highlight.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <p className="text-3xl font-black text-slate-900">{highlight.score}</p>
-                      <p className="text-sm leading-relaxed text-slate-600">{highlight.note}</p>
-                    </CardContent>
-                  </Card>
+            {inputError ? (
+              <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                {inputError}
+              </div>
+            ) : null}
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline">
+                {hasSubmittedProfile ? "직접 입력 프로필 적용" : "입력 대기"}
+              </Badge>
+              <Button
+                variant="outline"
+                size="sm"
+                className="ml-auto"
+                onClick={() => void fetchCalendar(year, month)}
+                disabled={isLoading || !hasSubmittedProfile}
+              >
+                <RefreshCw className="mr-1 h-3.5 w-3.5" />
+                다시 조회
+              </Button>
+              <Button
+                aria-label="cosmic-run-button"
+                size="sm"
+                className="h-9"
+                onClick={() => void handleRunCalendar()}
+                disabled={isLoading || !isFormValid}
+              >
+                코스믹 운세 예보 실행
+              </Button>
+            </div>
+
+            <p className="text-xs text-slate-500">{profileBannerText}</p>
+          </CardContent>
+        </Card>
+
+        {isLoading ? (
+          <Card className="rounded-3xl border-[#24303F]/10 bg-white">
+            <CardContent className="flex min-h-[180px] items-center justify-center">
+              <div className="inline-flex items-center gap-2 text-slate-600">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                월간 가이드를 계산하고 있습니다.
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {!isLoading && fetchError ? (
+          <Card className="rounded-3xl border-rose-200 bg-rose-50">
+            <CardContent className="p-6 text-sm font-semibold text-rose-700">
+              {fetchError}
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {!isLoading && !fetchError && !calendarData ? (
+          <Card className="rounded-3xl border-[#24303F]/10 bg-white">
+            <CardContent className="p-6 text-sm text-slate-600">
+              입력 후 실행 버튼을 눌러 이번 달 운세 예보 가이드를 생성하세요.
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {!isLoading && !fetchError && calendarData ? (
+          <div className="space-y-5">
+            <Card className="rounded-3xl border-[#24303F]/10 bg-white">
+              <CardHeader>
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-[#C9A86A]">
+                  Monthly Brief
+                </p>
+                <CardTitle className="text-2xl text-[#24303F]">
+                  {calendarData.summary.headline}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-slate-700">{calendarData.summary.focus}</p>
+                <p className="text-sm font-semibold text-rose-700">
+                  {calendarData.summary.caution}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-3xl border-[#24303F]/10 bg-white">
+              <CardHeader>
+                <CardTitle className="text-lg text-[#24303F]">우선 행동</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-slate-700">
+                  {calendarData.priorityActions.map((action) => (
+                    <li key={action}>- {action}</li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-3xl border-[#24303F]/10 bg-white">
+              <CardHeader>
+                <CardTitle className="text-lg text-[#24303F]">선택 가이드</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-3 md:grid-cols-2">
+                {calendarData.choiceGuides.map((guide) => (
+                  <article
+                    key={guide.id}
+                    className="rounded-2xl border border-[#24303F]/10 bg-[#FAF7F2] p-4"
+                  >
+                    <p className="font-bold text-[#24303F]">{guide.title}</p>
+                    <p className="mt-1 text-sm text-slate-700">{guide.guidance}</p>
+                    <p className="mt-2 text-xs font-semibold text-emerald-700">
+                      추천: {guide.recommendedAction}
+                    </p>
+                    <p className="mt-1 text-xs font-semibold text-rose-700">
+                      피해야 할 선택: {guide.avoidAction}
+                    </p>
+                  </article>
                 ))}
-              </section>
+              </CardContent>
+            </Card>
 
-              <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-                <Card className="rounded-2xl border-slate-200">
-                  <CardHeader>
-                    <CardTitle className="text-lg font-black text-slate-900">날짜별 이벤트</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {calendarData.events.map((event) => (
-                      <div key={`${event.date}-${event.title}`} className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-                        <div className="mb-2 flex items-center justify-between gap-3">
-                          <p className="text-sm font-semibold text-slate-700">{event.date}</p>
-                          <Badge variant="outline" className={impactBadgeClassMap[event.impact]}>
-                            {impactLabelMap[event.impact]}
-                          </Badge>
-                        </div>
-                        <p className="text-base font-bold text-slate-900">{event.title}</p>
-                        <p className="mt-1 text-sm text-slate-600">{event.meaning}</p>
-                        <p className="mt-2 text-sm font-medium text-blue-700">실행: {event.action}</p>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-
-                <Card className="rounded-2xl border-slate-200">
-                  <CardHeader>
-                    <CardTitle className="text-lg font-black text-slate-900">행동 체크리스트</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-                      <p className="mb-2 text-sm font-bold text-emerald-900">해야 할 것</p>
-                      <ul className="space-y-2 text-sm text-emerald-900/90">
-                        {calendarData.checklist.do.map((item) => (
-                          <li key={`do-${item}`}>• {item}</li>
-                        ))}
-                      </ul>
+            <Card className="rounded-3xl border-[#24303F]/10 bg-white">
+              <CardHeader>
+                <CardTitle className="text-lg text-[#24303F]">단계별 실행</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {orderedPhaseGuides.map((guide) => (
+                  <article
+                    key={`${guide.phase}-${guide.title}`}
+                    className="rounded-2xl border border-[#24303F]/10 bg-[#FAF7F2] p-4"
+                  >
+                    <div className="mb-2 flex items-center justify-between">
+                      <p className="text-sm font-bold text-[#24303F]">
+                        {phaseLabelMap[guide.phase]}
+                      </p>
+                      <Badge variant="outline">{impactLabelMap[guide.impact]}</Badge>
                     </div>
-                    <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
-                      <p className="mb-2 text-sm font-bold text-rose-900">피해야 할 것</p>
-                      <ul className="space-y-2 text-sm text-rose-900/90">
-                        {calendarData.checklist.dont.map((item) => (
-                          <li key={`dont-${item}`}>• {item}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </CardContent>
-                </Card>
-              </section>
-
-              <section className="grid gap-4 md:grid-cols-2">
-                {calendarData.chapters.map((chapter) => (
-                  <Card key={chapter.id} className="rounded-2xl border-slate-200">
-                    <CardHeader>
-                      <CardTitle className="text-lg font-black text-slate-900">{chapter.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <p className="text-sm leading-relaxed text-slate-600">{chapter.interpretation}</p>
-                      <ul className="space-y-2 text-sm font-medium text-blue-700">
-                        {chapter.actionGuide.map((guide) => (
-                          <li key={`${chapter.id}-${guide}`}>• {guide}</li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                  </Card>
+                    <p className="font-semibold text-[#24303F]">{guide.title}</p>
+                    <p className="mt-1 text-sm text-slate-700">{guide.meaning}</p>
+                    <p className="mt-2 text-sm font-semibold text-[#24303F]">
+                      실행: {guide.action}
+                    </p>
+                  </article>
                 ))}
-              </section>
+              </CardContent>
+            </Card>
 
-              <Card className="rounded-2xl border-slate-200">
-                <CardHeader>
-                  <CardTitle className="text-lg font-black text-slate-900">심화 데이터</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Accordion type="single" collapsible className="w-full">
-                    <AccordionItem value="source-notes">
-                      <AccordionTrigger>소스 노트</AccordionTrigger>
-                      <AccordionContent>
-                        <ul className="space-y-1 text-sm text-slate-600">
-                          {(calendarData.deepData?.sourceNotes ?? []).map((note) => (
-                            <li key={note}>• {note}</li>
-                          ))}
-                        </ul>
-                      </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="raw-report">
-                      <AccordionTrigger>원본 리포트 텍스트</AccordionTrigger>
-                      <AccordionContent>
-                        <p className="whitespace-pre-wrap rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
-                          {calendarData.deepData?.rawReport ?? "구조형 응답으로 제공되어 원본 텍스트가 없습니다."}
-                        </p>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                </CardContent>
-              </Card>
-            </motion.section>
-          ) : null}
-
-          {!isLoading && !calendarData ? (
-            <motion.section key="empty" {...sectionMotion} transition={{ duration: 0.2 }}>
-              <Card className="rounded-2xl border-slate-200">
-                <CardContent className="py-14 text-center">
-                  <p className="text-sm font-semibold text-slate-600">월간 리포트를 불러오지 못했습니다. 다시 시도해 주세요.</p>
-                </CardContent>
-              </Card>
-            </motion.section>
-          ) : null}
-        </AnimatePresence>
+            <Card className="rounded-3xl border-[#24303F]/10 bg-white">
+              <CardHeader>
+                <CardTitle className="text-lg text-[#24303F]">회피 리스트</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-rose-700">
+                  {calendarData.avoidList.map((item) => (
+                    <li key={item}>- {item}</li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+        ) : null}
       </div>
     </AnalysisPageShell>
   );

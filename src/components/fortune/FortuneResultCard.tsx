@@ -20,7 +20,7 @@ export function FortuneResultCard({ title, fortune, saveAction, isSaving = false
         <LuckScoreRing score={fortune.score} />
       </div>
 
-      <p className="text-[14px] leading-6 text-foreground">{fortune.details}</p>
+      <p className="text-[14px] leading-7 text-foreground">{fortune.details}</p>
 
       <div className="grid grid-cols-2 gap-3 text-sm">
         <div className="rounded-md bg-bg-subtle p-3">

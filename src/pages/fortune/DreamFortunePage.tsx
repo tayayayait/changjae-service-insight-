@@ -77,7 +77,7 @@ export default function DreamFortunePage() {
       });
       toast({
         title: "저장 완료",
-        description: "꿈해몽 결과가 마이페이지에 저장되었습니다.",
+        description: "꿈해몽 결과가 저장되었습니다.",
       });
     } catch (saveError) {
       toast({

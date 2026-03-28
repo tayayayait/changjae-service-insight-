@@ -8,52 +8,58 @@ interface QualityChartProps {
 
 export function QualityChart({ data }: QualityChartProps) {
   const chartData = [
-    { 
-      id: "cardinal", 
-      label: "카디널 (시작)", 
-      value: data.cardinal, 
+    {
+      id: "cardinal",
+      label: "카디널",
+      value: data.cardinal,
       color: "bg-rose-500",
-      desc: "주도력, 리더십, 새로운 시작을 알리는 에너지" 
+      bgClass: "bg-rose-50/70 border-rose-100",
+      textClass: "text-rose-900",
+      desc: "주도력, 리더십, 새로운 시작"
     },
-    { 
-      id: "fixed", 
-      label: "픽스드 (유지)", 
-      value: data.fixed, 
+    {
+      id: "fixed",
+      label: "픽스드",
+      value: data.fixed,
       color: "bg-emerald-500",
-      desc: "인내심, 끈기, 지속성과 안정감을 주는 에너지" 
+      bgClass: "bg-emerald-50/70 border-emerald-100",
+      textClass: "text-emerald-900",
+      desc: "인내심, 끈기, 지속성과 안정"
     },
-    { 
-      id: "mutable", 
-      label: "뮤터블 (변화)", 
-      value: data.mutable, 
+    {
+      id: "mutable",
+      label: "뮤터블",
+      value: data.mutable,
       color: "bg-violet-500",
-      desc: "적응력, 통찰력, 유연하게 대처하는 에너지" 
+      bgClass: "bg-violet-50/70 border-violet-100",
+      textClass: "text-violet-900",
+      desc: "적응력, 통찰력, 유연한 대처"
     },
   ];
 
   const total = chartData.reduce((sum, item) => sum + item.value, 0) || 1;
 
   return (
-    <div className="bg-white rounded-[32px] p-6 sm:p-8 border border-gray-100 shadow-sm">
-      <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-        <span className="w-1.5 h-6 bg-teal-500 rounded-full"></span>
-        행동 패턴 (Modalities/Qualities)
+    <div className="flex h-full flex-col rounded-3xl border border-gray-100 bg-white p-6 shadow-sm md:p-8">
+      <h3 className="mb-6 flex items-center gap-2 text-lg font-black text-slate-900">
+        <span className="h-6 w-1.5 rounded-full bg-teal-500"></span>
+        행동 패턴 (Modalities)
       </h3>
 
-      <div className="space-y-6">
+      <div className="flex flex-1 flex-col justify-center gap-4">
         {chartData.map((item) => {
           const percent = Math.round((item.value / total) * 100);
           return (
-            <div key={item.id} className="relative">
-              <div className="flex justify-between items-end mb-2">
+            <div key={item.id} className={`rounded-2xl border p-3.5 md:p-4 transition-all hover:-translate-y-0.5 ${item.bgClass}`}>
+              <div className="mb-3 flex items-start justify-between">
                 <div>
-                  <h4 className="font-bold text-gray-900">{item.label}</h4>
-                  <p className="text-xs text-gray-500 mt-1">{item.desc}</p>
+                  <h4 className={`text-sm font-black tracking-tight ${item.textClass}`}>{item.label}</h4>
+                  <p className={`mt-1 text-xs font-semibold tracking-tight opacity-80 ${item.textClass}`}>{item.desc}</p>
                 </div>
-                <span className="text-lg font-bold text-gray-700">{percent}%</span>
+                <span className={`text-xl font-black ${item.textClass} shrink-0`}>{percent}%</span>
               </div>
-              <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden">
-                <div 
+              <div className="h-2 w-full overflow-hidden rounded-full bg-white/60">
+                <div
                   className={`h-full ${item.color} rounded-full transition-all duration-1000 ease-out`}
                   style={{ width: `${percent}%` }}
                 />

@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Loader2, Heart, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -57,10 +57,10 @@ export default function AstrologySynastryPage() {
       };
       const response = await getAstrologyAISynastry(req);
       setAiReport(response.report);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "AI 분석 실패",
-        description: error.message || "AI 해석을 가져오는 데 실패했습니다.",
+        description: error instanceof Error ? error.message : "AI 해석을 가져오는 데 실패했습니다.",
         variant: "destructive"
       });
     } finally {
@@ -74,10 +74,10 @@ export default function AstrologySynastryPage() {
       const data = await getAstrologySynastry({ p1, p2 });
       setResult(data);
       setStep(2);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "오류 발생",
-        description: error.message || "궁합 분석 중 문제가 발생했습니다.",
+        description: error instanceof Error ? error.message : "궁합 분석 중 문제가 발생했습니다.",
         variant: "destructive"
       });
     } finally {

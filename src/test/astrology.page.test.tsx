@@ -1,92 +1,63 @@
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
-import { AstrologyReportView } from "@/pages/AstrologyPage";
+import { AstrologyReportView } from "@/components/astrology/AstrologyReportView";
 import { buildFallbackAstrologyBirthReport, toAstrologyDeepData } from "@/lib/astrologyReport";
 
-const createReport = () =>
-  buildFallbackAstrologyBirthReport(
-    toAstrologyDeepData({
-      success: true,
-      data: {},
-      big3: {
-        sun: {
-          name: "Sun",
-          nameKo: "태양",
-          sign: "Aries",
-          signKo: "양자리",
-          element: "Fire",
-          quality: "Cardinal",
-          house: 1,
-          degree: 10.2,
-          retrograde: false,
-          interpretation: "sun",
-        },
-        moon: {
-          name: "Moon",
-          nameKo: "달",
-          sign: "Cancer",
-          signKo: "게자리",
-          element: "Water",
-          quality: "Cardinal",
-          house: 4,
-          degree: 3.4,
-          retrograde: false,
-          interpretation: "moon",
-        },
-        rising: {
-          sign: "Libra",
-          signKo: "천칭자리",
-          element: "Air",
-          quality: "Cardinal",
-          degree: 5.2,
-          interpretation: "rising",
-        },
-      },
-      planets: [],
-      houses: [],
-      aspects: [],
-      elementDistribution: { fire: 4, earth: 1, air: 3, water: 2 },
-      qualityDistribution: { cardinal: 5, fixed: 2, mutable: 3 },
-      chartSvg: "<svg></svg>",
-    }),
-    { birthTimeKnown: true },
-    null,
-  );
+const createRecord = () => ({
+  id: "r1",
+  userId: null,
+  guestId: "g1",
+  serviceType: "astro-natal",
+  inputSnapshot: {
+    name: "테스트",
+    year: 1995,
+    month: 6,
+    day: 29,
+    birthTimeKnown: true,
+  },
+  inputFingerprint: "fp",
+  reportPayload: buildFallbackAstrologyBirthReport(toAstrologyDeepData({}), { birthTimeKnown: true }, null),
+  templateVersion: "v5",
+  isUnlocked: true,
+  createdAt: new Date().toISOString(),
+});
 
-describe("AstrologyReportView", () => {
-  it("renders report sections in summary -> detail -> deep-data order", async () => {
-    render(
-      <MemoryRouter>
-        <AstrologyReportView report={createReport()} />
-      </MemoryRouter>,
-    );
+const isBefore = (a: HTMLElement, b: HTMLElement) =>
+  Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
 
-    expect(screen.getByText("핵심 요약")).toBeInTheDocument();
-    expect(screen.getByText("상세 해석")).toBeInTheDocument();
-    expect(screen.getByText("심화 데이터")).toBeInTheDocument();
+describe("AstrologyReportView v5", () => {
+  it("renders sections in 9-part fixed order", () => {
+    render(<AstrologyReportView record={createRecord()} isLocked={false} />);
 
-    const pageText = document.body.textContent || "";
-    const summaryIndex = pageText.indexOf("핵심 요약");
-    const detailIndex = pageText.indexOf("상세 해석");
-    const deepIndex = pageText.indexOf("심화 데이터");
+    const diagnosis = screen.getByTestId("diagnosis-section");
+    const insights = screen.getByTestId("core-insights-section");
+    const identity = screen.getByTestId("identity-section");
+    const questionInterpretation = screen.getByTestId("question-interpretation-section");
+    const operationManual = screen.getByTestId("operation-manual-section");
+    const longTermGrowth = screen.getByTestId("long-term-growth-section");
+    const actionRoutine = screen.getByTestId("action-routine-section");
+    const summaryCard = screen.getByTestId("summary-card-section");
+    const detail = screen.getByTestId("detail-accordion");
 
-    expect(summaryIndex).toBeGreaterThanOrEqual(0);
-    expect(detailIndex).toBeGreaterThan(summaryIndex);
-    expect(deepIndex).toBeGreaterThan(detailIndex);
+    expect(isBefore(diagnosis, insights)).toBe(true);
+    expect(isBefore(insights, identity)).toBe(true);
+    expect(isBefore(identity, questionInterpretation)).toBe(true);
+    expect(isBefore(questionInterpretation, operationManual)).toBe(true);
+    expect(isBefore(operationManual, longTermGrowth)).toBe(true);
+    expect(isBefore(longTermGrowth, actionRoutine)).toBe(true);
+    expect(isBefore(actionRoutine, summaryCard)).toBe(true);
+    expect(isBefore(summaryCard, detail)).toBe(true);
   });
 
-  it("shows rule-based summary even when ai insight is missing", () => {
-    const report = createReport();
-    report.chapters[0].aiInsight = null;
+  it("shows exactly 3 core insights and 5 question cards", () => {
+    render(<AstrologyReportView record={createRecord()} isLocked={false} />);
 
-    render(
-      <MemoryRouter>
-        <AstrologyReportView report={report} />
-      </MemoryRouter>,
-    );
+    expect(screen.getByTestId("core-insights-section").querySelectorAll("article").length).toBe(3);
+    expect(screen.getByTestId("question-interpretation-section").querySelectorAll("article").length).toBe(5);
+  });
 
-    expect(screen.queryByText("AI 확장 해설")).not.toBeInTheDocument();
-    expect(screen.getByText("지금 할 행동")).toBeInTheDocument();
+  it("shows 4 operation manual cards", () => {
+    render(<AstrologyReportView record={createRecord()} isLocked={false} />);
+    expect(screen.getByTestId("operation-manual-section").querySelectorAll("article").length).toBe(4);
   });
 });

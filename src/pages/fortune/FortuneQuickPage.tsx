@@ -11,7 +11,7 @@ import { STAR_SIGN_OPTIONS, ZODIAC_OPTIONS } from "@/lib/fortuneOptions";
 import { AnalysisPeriod, FortuneResult, QuickFortuneKind } from "@/types/result";
 
 const toISODate = (date: Date) => date.toISOString().slice(0, 10);
-const isPeriod = (value: string | null): value is AnalysisPeriod => value === "today" || value === "week" || value === "month";
+const isPeriod = (value: string | null): value is AnalysisPeriod => value === "today";
 
 export default function FortuneQuickPage() {
   const [searchParams] = useSearchParams();
@@ -19,8 +19,8 @@ export default function FortuneQuickPage() {
   const requestedKind = searchParams.get("kind");
   const displayKind: QuickFortuneKind | "both" = requestedKind === "zodiac" || requestedKind === "starSign" ? requestedKind : "both";
 
-  const [zodiacPeriod, setZodiacPeriod] = useState<AnalysisPeriod>(initialPeriod);
-  const [starPeriod, setStarPeriod] = useState<AnalysisPeriod>(initialPeriod);
+  const [zodiacPeriod] = useState<AnalysisPeriod>("today");
+  const [starPeriod] = useState<AnalysisPeriod>("today");
   const [zodiac, setZodiac] = useState<string>(ZODIAC_OPTIONS[0]);
   const [starSign, setStarSign] = useState<string>(STAR_SIGN_OPTIONS[0]);
 
@@ -97,7 +97,7 @@ export default function FortuneQuickPage() {
                 title="띠 운세"
                 description="띠와 기간을 선택해 빠르게 확인합니다."
                 period={zodiacPeriod}
-                onPeriodChange={setZodiacPeriod}
+                onPeriodChange={() => {}}
                 selectLabel="띠"
                 options={ZODIAC_OPTIONS}
                 value={zodiac}
@@ -119,7 +119,7 @@ export default function FortuneQuickPage() {
                 title="별자리 운세"
                 description="별자리와 기간을 선택해 가볍게 확인합니다."
                 period={starPeriod}
-                onPeriodChange={setStarPeriod}
+                onPeriodChange={() => {}}
                 selectLabel="별자리"
                 options={STAR_SIGN_OPTIONS}
                 value={starSign}

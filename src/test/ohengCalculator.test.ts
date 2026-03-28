@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { buildPaljaFromPillars, calculateOhengDistribution, determineYongsin, getGanOheng, getJiOheng } from "@/lib/ohengCalculator";
 
 describe("ohengCalculator", () => {
@@ -8,13 +8,13 @@ describe("ohengCalculator", () => {
       monthPillar: "병인",
       dayPillar: "정묘",
       hourPillar: "계해",
-      yearPillarHanja: "甲子",
-      monthPillarHanja: "丙寅",
+      yearPillarHanja: "ˣ子",
+      monthPillarHanja: "ܰ寅",
       dayPillarHanja: "丁卯",
-      hourPillarHanja: "癸亥",
+      hourPillarHanja: "ͤ亥",
     });
 
-    expect(palja.year.gan).toBe("甲");
+    expect(palja.year.gan).toBe("ˣ");
     expect(palja.time.ji).toBe("亥");
     expect(palja.month.ohengJi).toBe("목");
   });
@@ -38,7 +38,7 @@ describe("ohengCalculator", () => {
     expect(distribution).toHaveLength(5);
     expect(distribution.find((item) => item.element === "목")?.count).toBe(4);
     expect(distribution.find((item) => item.element === "수")?.count).toBe(4);
-    expect(distribution.find((item) => item.element === "화")?.count).toBe(0);
+    expect(distribution.find((item) => item.element === "ȭ")?.count).toBe(0);
   });
 
   it("returns weakest elements as yongsin", () => {
@@ -50,6 +50,6 @@ describe("ohengCalculator", () => {
     });
     const distribution = calculateOhengDistribution(palja);
     const yongsin = determineYongsin(palja, distribution);
-    expect(yongsin.includes("화")).toBe(true);
+    expect(yongsin.includes("ȭ")).toBe(true);
   });
 });

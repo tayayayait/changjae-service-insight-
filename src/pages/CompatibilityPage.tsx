@@ -8,6 +8,7 @@ import { CompatibilityResult, OhengDistribution, Palja, SajuResult, UserBirthDat
 import { analyzeCompatibility } from "@/lib/geminiClient";
 import { calculateSaju, parseTimeString } from "@/lib/sajuEngine";
 import { ensureGuestSessionId, getLatestSajuResultOrProfile, saveCompatibilityResult } from "@/lib/resultStore";
+import { REGION_SIDO_OPTIONS } from "@/lib/koreanRegions";
 import { AnalysisPageShell } from "@/components/layout/AnalysisPageShell";
 import { InteractionCard } from "@/components/common/InteractionCard";
 import { InsightCard } from "@/components/common/InsightCard";
@@ -51,13 +52,8 @@ export default function CompatibilityPage() {
   const [gender, setGender] = useState<"male" | "female">("female");
 
   useEffect(() => {
-    const load = async () => {
-      const latest = await getLatestSajuResultOrProfile();
-      setBaseResult(latest);
-      setIsLoading(false);
-    };
-
-    void load();
+    // 본인의 사주 데이터가 필요할 경우 명시적으로 분석 페이지로 유도합니다.
+    setIsLoading(false);
   }, []);
 
   const canSubmit = useMemo(() => Boolean(date), [date]);
@@ -203,11 +199,16 @@ export default function CompatibilityPage() {
                 <option value="female">여성</option>
                 <option value="male">남성</option>
               </select>
-              <select className="h-12 rounded-xl border border-border px-3 text-[14px] bg-white md:col-span-2 focus:ring-2 focus:ring-ring focus:outline-none" value={location} onChange={(event) => setLocation(event.target.value)}>
-                <option value="서울">서울</option>
-                <option value="경기/인천">경기/인천</option>
-                <option value="경남/부산/울산">경남/부산/울산</option>
-                <option value="해외">해외</option>
+              <select
+                className="h-12 rounded-xl border border-border px-3 text-[14px] bg-white md:col-span-2 focus:ring-2 focus:ring-ring focus:outline-none"
+                value={location}
+                onChange={(event) => setLocation(event.target.value)}
+              >
+                {REGION_SIDO_OPTIONS.map((sido) => (
+                  <option key={sido} value={sido}>
+                    {sido}
+                  </option>
+                ))}
               </select>
             </div>
             <Button type="submit" className="h-14 w-full bg-[#24303F] text-white rounded-xl mt-6" disabled={!canSubmit}>

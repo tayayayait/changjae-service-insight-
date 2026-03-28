@@ -12,6 +12,11 @@ import {
 
 type JsonObject = Record<string, unknown>;
 
+const SAJU_COLUMNS = "id, user_id, guest_id, privacy_mode, request_fingerprint, source_service_id, prompt_version, born_data, born_data_enc, born_data_iv, palja_data, oheng_data, interests, free_question, gemini_summary, gemini_sections, service_type, report_template_version, report_payload, lifetime_score, daeun_periods, golden_periods, personality_type, created_at";
+const COMPATIBILITY_COLUMNS = "id, user_id, guest_id, person_a_data, person_b_data, person_a_data_enc, person_a_data_iv, person_b_data_enc, person_b_data_iv, person_a_palja, person_b_palja, person_a_oheng, person_b_oheng, score, summary, strengths, cautions, advice, created_at";
+const FORTUNE_COLUMNS = "id, user_id, guest_id, base_result_id, period, score, summary, details, lucky_color, lucky_item, source_kind, created_at";
+const DREAM_COLUMNS = "id, user_id, guest_id, dream_input, dream_input_enc, dream_input_iv, interpretation, created_at";
+
 interface ActionRequest {
   action: string;
   payload?: JsonObject;
@@ -335,7 +340,7 @@ serve(async (req) => {
           golden_periods: Array.isArray(result.goldenPeriods) ? result.goldenPeriods : null,
           personality_type: result.personalityType ?? null,
         })
-        .select("*")
+        .select(SAJU_COLUMNS)
         .single();
 
       if (error || !data) {
@@ -350,7 +355,7 @@ serve(async (req) => {
 
     if (action === "list_saju") {
       const limit = Number(payload.limit ?? 20);
-      let query = client.from("saju_results").select("*").order("created_at", { ascending: false }).limit(limit);
+      let query = client.from("saju_results").select(SAJU_COLUMNS).order("created_at", { ascending: false }).limit(limit);
 
       if (ownerFilter.user_id) {
         query = query.eq("user_id", ownerFilter.user_id);
@@ -371,7 +376,7 @@ serve(async (req) => {
 
     if (action === "get_saju") {
       const id = payload.id as string;
-      let query = client.from("saju_results").select("*").eq("id", id).limit(1);
+      let query = client.from("saju_results").select(SAJU_COLUMNS).eq("id", id).limit(1);
 
       if (ownerFilter.user_id) {
         query = query.eq("user_id", ownerFilter.user_id);
@@ -407,7 +412,7 @@ serve(async (req) => {
 
       let query = client
         .from("saju_results")
-        .select("*")
+        .select(SAJU_COLUMNS)
         .eq("request_fingerprint", requestFingerprint)
         .order("created_at", { ascending: false })
         .limit(1);
@@ -481,7 +486,7 @@ serve(async (req) => {
           cautions: result.cautions ?? [],
           advice: result.advice,
         })
-        .select("*")
+        .select(COMPATIBILITY_COLUMNS)
         .single();
 
       if (error || !data) {
@@ -496,7 +501,7 @@ serve(async (req) => {
 
     if (action === "list_compatibility") {
       const limit = Number(payload.limit ?? 20);
-      let query = client.from("compatibility_results").select("*").order("created_at", { ascending: false }).limit(limit);
+      let query = client.from("compatibility_results").select(COMPATIBILITY_COLUMNS).order("created_at", { ascending: false }).limit(limit);
 
       if (ownerFilter.user_id) {
         query = query.eq("user_id", ownerFilter.user_id);
@@ -560,7 +565,7 @@ serve(async (req) => {
           lucky_item: (result.luckyItem as string | undefined) ?? null,
           source_kind: "personal",
         })
-        .select("*")
+        .select(FORTUNE_COLUMNS)
         .single();
 
       if (error || !data) {
@@ -575,7 +580,7 @@ serve(async (req) => {
 
     if (action === "list_fortune") {
       const limit = Number(payload.limit ?? 20);
-      let query = client.from("fortune_results").select("*").order("created_at", { ascending: false }).limit(limit);
+      let query = client.from("fortune_results").select(FORTUNE_COLUMNS).order("created_at", { ascending: false }).limit(limit);
 
       if (ownerFilter.user_id) {
         query = query.eq("user_id", ownerFilter.user_id);
@@ -628,7 +633,7 @@ serve(async (req) => {
           dream_input_iv: encryptedInput.iv,
           interpretation: result.interpretation,
         })
-        .select("*")
+        .select(DREAM_COLUMNS)
         .single();
 
       if (error || !data) {
@@ -643,7 +648,7 @@ serve(async (req) => {
 
     if (action === "list_dream") {
       const limit = Number(payload.limit ?? 20);
-      let query = client.from("dream_results").select("*").order("created_at", { ascending: false }).limit(limit);
+      let query = client.from("dream_results").select(DREAM_COLUMNS).order("created_at", { ascending: false }).limit(limit);
 
       if (ownerFilter.user_id) {
         query = query.eq("user_id", ownerFilter.user_id);
@@ -728,6 +733,8 @@ serve(async (req) => {
       });
     }
 
+
+
     return new Response(JSON.stringify({ ok: false, error: `unknown action: ${action}` }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -736,9 +743,9 @@ serve(async (req) => {
     const message = error instanceof Error ? error.message : "unknown error";
     const stack = error instanceof Error ? error.stack : "";
     console.error("secure-results error detail:", { message, stack });
-    
-    return new Response(JSON.stringify({ 
-      ok: false, 
+
+    return new Response(JSON.stringify({
+      ok: false,
       error: message,
       debug: Deno.env.get("ENVIRONMENT") === "development" ? stack : undefined
     }), {

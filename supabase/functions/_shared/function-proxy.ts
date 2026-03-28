@@ -18,6 +18,7 @@ type ProxyEdgeFunctionOptions = {
   payload: unknown;
   request?: Request;
   timeoutMs?: number;
+  extraHeaders?: Record<string, string>;
 };
 
 export const proxyEdgeFunction = async ({
@@ -25,6 +26,7 @@ export const proxyEdgeFunction = async ({
   payload,
   request,
   timeoutMs = DEFAULT_PROXY_TIMEOUT_MS,
+  extraHeaders = {},
 }: ProxyEdgeFunctionOptions): Promise<Response> => {
   const supabaseUrl = resolveSupabaseUrl();
   const serviceRoleKey = resolveServiceRoleKey();
@@ -50,6 +52,7 @@ export const proxyEdgeFunction = async ({
     apikey: serviceRoleKey,
     Authorization: incomingAuthorization || `Bearer ${serviceRoleKey}`,
     "Content-Type": incomingContentType || "application/json",
+    ...extraHeaders,
   };
 
   if (incomingGuestId) {
@@ -95,4 +98,15 @@ export const parseJsonBody = async (request: Request): Promise<Record<string, un
   } catch {
     return {};
   }
+};
+
+export const withLegacyHeaders = (response: Response, canonicalFunction: string): Response => {
+  const headers = new Headers(response.headers);
+  headers.set("x-edge-deprecated", "true");
+  headers.set("x-edge-canonical-function", canonicalFunction);
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
 };

@@ -1,29 +1,30 @@
-# Palmistry Runtime Notes (2026-03-19)
+# Palmistry Runtime Notes (2026-03-20)
 
-- Client-side timeout is enforced for palm actions to prevent infinite loading:
-  - `palm_analyze`: 25s
-  - `ai_palm_qa`: 20s
-- Palm runtime architecture is now Supabase-only:
-  - Browser runs `MediaPipe Hand Landmarker` (`@mediapipe/tasks-vision`) and extracts palm quality/features.
-  - Edge Function `action="palm_analyze"` validates `clientAnalysis` payload and builds classification/interpretation.
-  - Python palm backend proxy path is no longer used for palm action.
-- Fallback policy:
-  - Deterministic fake palm analysis fallback remains disabled.
-  - Missing/invalid client analysis returns explicit error payload + HTTP status.
+- Client-side timeout is enforced for palm actions:
+  - `palm_analyze_v2`: 35s
+  - `ai_palm_qa_v2`: 20s
+- Palm runtime is Supabase Edge Function based (`palmistry-scanner-api`).
+  - Frontend sends `imageData` (+ optional `handedness`) to `action="palm_analyze_v2"`.
+  - v1 funnel adds required auxiliary inputs for `mode=main`:
+    - `auxiliary.palmThickness`: `thin | normal | thick`
+    - `auxiliary.nailShape`: `round | pointed | square | rectangular`
+- Palm analyze response contract:
+  - `result.classification`: `palm_type`, `dominant_line`, `confidence`
+  - `result.lines`: `life`, `heart`, `head`, `fate`
+  - `result.sections`: `personality`, `wealth_career`, `relationship`, `timing`
+  - `result.overlay?`:
+    - `lines.{heart|head|life|fate}.points[]` normalized `(x,y)` in `0..1`
+    - `labels.{heart|head|life|fate}` normalized `(x,y)` in `0..1`
+  - `result.quality`, `result.handedness`, `result.elapsed_ms`
+- Overlay fallback policy:
+  - Edge sanitizes invalid overlay coordinates.
+  - Client sanitizes again and drops invalid lines/labels.
+  - If overlay is missing/invalid, UI keeps text report and section/Q&A features.
 - Standard palm error codes:
   - `PALM_INPUT_INVALID`
   - `PALM_QUALITY_LOW`
   - `PALM_BACKEND_UNAVAILABLE`
   - `PALM_ANALYSIS_TIMEOUT`
-- Client palm pipeline:
-  - Precheck: hand detection, handedness, blur/exposure/centering/rotation quality.
-  - FeatureBuilder: landmark-derived `life/head/heart` length, intersections, `break_count`, `curvature`, confidence.
-- Edge palm response contract:
-  - `result.classification`: `palm_type`, `dominant_line`, `confidence`
-  - `result.features`: numeric feature map from client analysis
-  - `result.quality`: quality summary and reasons
-  - `result.handedness`, `result.elapsed_ms`
-- Frontend behavior:
-  - Quality reasons are surfaced in UI.
-  - MediaPipe initialization failure is surfaced as explicit retry guidance.
-  - Section changes and Q&A reuse one analysis result (no re-analyze).
+- Frontend main funnel (`mode=main`) state machine:
+  - `upload -> auxiliary -> analyzing -> result`
+  - `mode=face` keeps the previous simplified flow.

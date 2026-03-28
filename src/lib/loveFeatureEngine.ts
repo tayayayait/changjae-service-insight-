@@ -1,4 +1,4 @@
-import { LoveFeatureSet, LoveScoreSet, LoveServiceType, LoveSubjectInput } from "@/types/love";
+import { LoveContext, LoveContextAnswer, LoveFeatureSet, LoveScoreSet, LoveServiceType, LoveSubjectInput } from "@/types/love";
 import { CalculatedSajuPayload } from "./sajuEngine";
 import { Oheng } from "@/types/result";
 import { getGanOheng } from "./ohengCalculator";
@@ -168,7 +168,7 @@ const buildSpouseStar = (subject: LoveSubjectInput, saju: CalculatedSajuPayload)
   }
 
   const total = sameCount + oppositeCount;
-  const dominantType = total === 0 ? "mixed" : sameCount >= oppositeCount ? samePolarityType : oppositePolarityType;
+  const dominantType = (total === 0 ? "mixed" : sameCount >= oppositeCount ? samePolarityType : oppositePolarityType) as "mixed" | "편재" | "편관" | "정재" | "정관";
   const score = clamp(45 + total * 15 + oppositeCount * 8, 30, 95);
   const reason = total === 0
     ? "원국 천간에 배우자성이 약해 현실 관계 경험을 통해 배우자상이 구체화되는 유형입니다."
@@ -239,7 +239,98 @@ export const extractLoveFeatureSet = ({
   };
 };
 
-export const calculateLoveScoreSet = (serviceType: LoveServiceType, feature: LoveFeatureSet): LoveScoreSet => {
+const extractContextBonus = (context?: LoveContext) => {
+  if (!context) {
+    return { pullBonus: 0, paceBonus: 0, alignmentBonus: 0, repairBonus: 0, timingBonus: 0 };
+  }
+
+  const marriageIntent = context.marriageIntent ?? "";
+  const preferredStyle = context.preferredRelationshipStyle ?? "";
+  const contextAnswers: LoveContextAnswer[] = context.contextAnswers ?? [];
+  const futureFocusKey = contextAnswers.find((a) => a.questionKey === "future_focus")?.answerKey ?? "";
+  
+  // couple-report specifics
+  const mainConcernKey = contextAnswers.find((a) => a.questionKey === "main_concern")?.answerKey ?? "";
+  const coupleOutcomeKey = contextAnswers.find((a) => a.questionKey === "couple_outcome")?.answerKey ?? "";
+  const relationshipTemperatureKey = contextAnswers.find((a) => a.questionKey === "relationship_temperature")?.answerKey ?? "";
+
+  let pullBonus = 0;
+  let paceBonus = 0;
+  let alignmentBonus = 0;
+  let repairBonus = 0;
+  let timingBonus = 0;
+
+  if (marriageIntent === "strong") {
+    timingBonus += 8;
+    alignmentBonus += 5;
+  } else if (marriageIntent === "none") {
+    timingBonus -= 5;
+  }
+
+  if (preferredStyle === "안정형") {
+    alignmentBonus += 6;
+    repairBonus += 4;
+  } else if (preferredStyle === "설렘형") {
+    pullBonus += 7;
+    paceBonus += 3;
+  } else if (preferredStyle === "현실형") {
+    alignmentBonus += 5;
+    paceBonus += 5;
+  } else if (preferredStyle === "성장형") {
+    repairBonus += 6;
+    paceBonus += 4;
+  }
+
+  if (futureFocusKey === "timing") {
+    timingBonus += 6;
+  } else if (futureFocusKey === "marriage_potential") {
+    alignmentBonus += 5;
+  } else if (futureFocusKey === "my_pattern") {
+    repairBonus += 5;
+  } else if (futureFocusKey === "person_type") {
+    pullBonus += 4;
+  }
+  
+  // couple-report context bonus
+  if (mainConcernKey === "communication") {
+    repairBonus += 6;
+  } else if (mainConcernKey === "repeated-conflict") {
+    repairBonus += 5;
+    pullBonus -= 3;
+  } else if (mainConcernKey === "trust") {
+    alignmentBonus += 5;
+    repairBonus += 4;
+  } else if (mainConcernKey === "life-money") {
+    paceBonus += 5;
+    alignmentBonus += 4;
+  } else if (mainConcernKey === "marriage-path") {
+    timingBonus += 6;
+    alignmentBonus += 5;
+  }
+
+  if (coupleOutcomeKey === "mutual_understanding") {
+    pullBonus += 4;
+  } else if (coupleOutcomeKey === "conflict_relief") {
+    repairBonus += 5;
+  } else if (coupleOutcomeKey === "future_direction") {
+    timingBonus += 5;
+  } else if (coupleOutcomeKey === "risk_points") {
+    alignmentBonus += 4;
+  }
+
+  if (relationshipTemperatureKey === "stable") {
+    paceBonus += 4;
+  } else if (relationshipTemperatureKey === "frequent_clash") {
+    repairBonus += 4;
+    pullBonus -= 3;
+  } else if (relationshipTemperatureKey === "future_anxiety") {
+    timingBonus += 4;
+  }
+
+  return { pullBonus, paceBonus, alignmentBonus, repairBonus, timingBonus };
+};
+
+export const calculateLoveScoreSet = (serviceType: LoveServiceType, feature: LoveFeatureSet, context?: LoveContext): LoveScoreSet => {
   let base = serviceType === "future-partner" ? 62 : serviceType === "couple-report" ? 58 : 55;
 
   if (feature.stemRelation === "generating") {
@@ -276,44 +367,50 @@ export const calculateLoveScoreSet = (serviceType: LoveServiceType, feature: Lov
     base -= 6;
   }
 
+  const bonus = extractContextBonus(context);
   const overall = clamp(base, 15, 99);
   const pull = clamp(
     overall +
-      (feature.relationStars.hasDohwa ? 6 : 0) +
-      (feature.branchRelation.relation === "합" ? 4 : 0) -
-      (feature.branchRelation.relation === "충" ? 7 : 0),
+    (feature.relationStars.hasDohwa ? 6 : 0) +
+    (feature.branchRelation.relation === "합" ? 4 : 0) -
+    (feature.branchRelation.relation === "충" ? 7 : 0) +
+    bonus.pullBonus,
     10,
     99,
   );
   const pace = clamp(
     overall +
-      (feature.stemRelation === "same" ? 5 : 0) +
-      (feature.stemRelation === "controlled" ? -7 : 0) +
-      (feature.timeConfidence >= 80 ? 4 : feature.timeConfidence <= 50 ? -4 : 0),
+    (feature.stemRelation === "same" ? 5 : 0) +
+    (feature.stemRelation === "controlled" ? -7 : 0) +
+    (feature.timeConfidence >= 80 ? 4 : feature.timeConfidence <= 50 ? -4 : 0) +
+    bonus.paceBonus,
     10,
     99,
   );
   const alignment = clamp(
     overall +
-      (feature.ohengBalance.complementarity >= 75 ? 8 : feature.ohengBalance.complementarity <= 45 ? -8 : 0) +
-      (feature.branchRelation.relation === "합" ? 5 : 0) -
-      (feature.branchRelation.relation === "파" ? 6 : 0),
+    (feature.ohengBalance.complementarity >= 75 ? 8 : feature.ohengBalance.complementarity <= 45 ? -8 : 0) +
+    (feature.branchRelation.relation === "합" ? 5 : 0) -
+    (feature.branchRelation.relation === "파" ? 6 : 0) +
+    bonus.alignmentBonus,
     10,
     99,
   );
   const repair = clamp(
     overall +
-      (feature.relationStars.hasCheoneul ? 5 : 0) +
-      (feature.stemRelation === "generating" ? 4 : 0) -
-      (feature.spousePalace.hasCollisionRisk ? 10 : 0),
+    (feature.relationStars.hasCheoneul ? 5 : 0) +
+    (feature.stemRelation === "generating" ? 4 : 0) -
+    (feature.spousePalace.hasCollisionRisk ? 10 : 0) +
+    bonus.repairBonus,
     10,
     99,
   );
   const timing = clamp(
     Math.round(feature.timeConfidence * 0.7) +
-      (serviceType === "future-partner" ? 15 : 0) +
-      (feature.branchRelation.relation === "합" ? 5 : 0) -
-      (feature.branchRelation.relation === "충" ? 6 : 0),
+    (serviceType === "future-partner" ? 15 : 0) +
+    (feature.branchRelation.relation === "합" ? 5 : 0) -
+    (feature.branchRelation.relation === "충" ? 6 : 0) +
+    bonus.timingBonus,
     20,
     99,
   );

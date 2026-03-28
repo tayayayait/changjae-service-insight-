@@ -11,6 +11,7 @@ import {
 import { RelationshipStatusSelector } from "./RelationshipStatusSelector";
 import { cn } from "@/lib/utils";
 import { normalizeTimeBlockId, TIME_BLOCKS } from "@/lib/timeBlocks";
+import { REGION_SIDO_OPTIONS } from "@/lib/koreanRegions";
 
 const DEFAULT_SUBJECT: LoveSubjectInput = {
   calendarType: "solar",
@@ -18,13 +19,13 @@ const DEFAULT_SUBJECT: LoveSubjectInput = {
   month: 1,
   day: 1,
   birthPrecision: "unknown",
-  location: "서울",
+  location: "서울특별시",
   gender: "female",
 };
 
-const CONTEXT_TOTAL_STEPS = 4;
+const CONTEXT_TOTAL_STEPS = 3;
 
-type ContextStep = 1 | 2 | 3 | 4;
+type ContextStep = 1 | 2 | 3;
 
 interface ContextOption {
   key: string;
@@ -201,6 +202,7 @@ const getDetailQuestionGroup = (serviceType: LoveServiceType, scenarioKey?: stri
           { key: "life-money", label: "생활/돈", legacyValue: "생활·돈" },
           { key: "marriage-path", label: "결혼 방향", legacyValue: "결혼" },
           { key: "unclear", label: "애매함/모름", legacyValue: "모름" },
+          { key: "other", label: "기타 (직접 입력)", legacyValue: "기타" },
         ],
       },
     };
@@ -388,12 +390,17 @@ const buildReviewItems = ({
       return;
     }
     const option = findOption(question, answerKey);
+    let answerLabel = option?.label ?? answerKey;
+    if (answerKey === "other" && selections[`${question.key}_custom`]) {
+      answerLabel = `기타: ${selections[`${question.key}_custom`]}`;
+    }
+
     baseItems.push({
       step,
       questionKey: question.key,
       questionLabel: question.label,
       answerKey,
-      answerLabel: option?.label ?? answerKey,
+      answerLabel,
     });
   };
 
@@ -508,15 +515,15 @@ function BirthInputCard({ title, subject, onChange, readOnly, noteTag, actionSlo
             "h-11 rounded-xl border border-border px-3 text-[14px]",
             readOnly ? "bg-gray-50 text-text-secondary" : "bg-white",
           )}
-          value={subject.location ?? "서울"}
+          value={subject.location ?? "서울특별시"}
           onChange={(event) => onChange({ ...subject, location: event.target.value })}
           disabled={readOnly}
         >
-          <option value="서울">서울</option>
-          <option value="경기/인천">경기/인천</option>
-          <option value="경남/부산/울산">경남/부산/울산</option>
-          <option value="해외">해외</option>
-          <option value="모름">모름</option>
+          {REGION_SIDO_OPTIONS.map((sido) => (
+            <option key={sido} value={sido}>
+              {sido}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -604,7 +611,7 @@ export function LoveInputStepper({ serviceType, initialSubjectA, isSubmitting, o
   const [contextAdditionalNote, setContextAdditionalNote] = useState("");
   const [contextStep, setContextStep] = useState<ContextStep>(1);
   const [stepError, setStepError] = useState<string | null>(null);
-  const [isEditingMine, setIsEditingMine] = useState(!initialSubjectA);
+  const [isEditingMine, setIsEditingMine] = useState(true);
   const [hydratedFromInitial, setHydratedFromInitial] = useState(false);
 
   const scenarioQuestion = useMemo(() => getScenarioQuestion(serviceType), [serviceType]);
@@ -624,8 +631,8 @@ export function LoveInputStepper({ serviceType, initialSubjectA, isSubmitting, o
         detailGroup,
         focusGroup,
         exactDate: contextExactDate,
-        detailStep: 2,
-        focusStep: 3,
+        detailStep: 1,
+        focusStep: 2,
       }),
     [contextSelections, contextExactDate, detailGroup, focusGroup, scenarioQuestion],
   );
@@ -633,7 +640,6 @@ export function LoveInputStepper({ serviceType, initialSubjectA, isSubmitting, o
   useEffect(() => {
     if (initialSubjectA && !hydratedFromInitial) {
       setSubjectA((prev) => ({ ...prev, ...initialSubjectA }));
-      setIsEditingMine(false);
       setHydratedFromInitial(true);
     }
   }, [initialSubjectA, hydratedFromInitial]);
@@ -664,12 +670,14 @@ export function LoveInputStepper({ serviceType, initialSubjectA, isSubmitting, o
       if (!contextSelections[scenarioQuestion.key]) {
         return `${scenarioQuestion.label}을 선택해 주세요.`;
       }
-      return null;
-    }
-
-    if (step === 2) {
       if (!contextSelections[detailGroup.primary.key]) {
         return `${detailGroup.primary.label}을 선택해 주세요.`;
+      }
+      if (
+        contextSelections[detailGroup.primary.key] === "other" &&
+        !contextSelections[`${detailGroup.primary.key}_custom`]?.trim()
+      ) {
+        return "직접 입력 내용을 한 글자 이상 적어주세요.";
       }
       if (detailGroup.secondary && !contextSelections[detailGroup.secondary.key]) {
         return `${detailGroup.secondary.label}을 선택해 주세요.`;
@@ -677,7 +685,7 @@ export function LoveInputStepper({ serviceType, initialSubjectA, isSubmitting, o
       return null;
     }
 
-    if (step === 3) {
+    if (step === 2) {
       if (!contextSelections[focusGroup.primary.key]) {
         return `${focusGroup.primary.label}을 선택해 주세요.`;
       }
@@ -711,10 +719,10 @@ export function LoveInputStepper({ serviceType, initialSubjectA, isSubmitting, o
   };
 
   const submit = async () => {
-    const message = validateStep(3);
+    const message = validateStep(2);
     if (message) {
       setStepError(message);
-      setContextStep(3);
+      setContextStep(2);
       return;
     }
 
@@ -749,7 +757,11 @@ export function LoveInputStepper({ serviceType, initialSubjectA, isSubmitting, o
       strong: "strong",
     };
 
-    const concernLabels = [detailOption?.legacyValue, detailSecondaryOption?.legacyValue, supportOption?.legacyValue]
+    const customDetail = contextSelections[`${detailGroup.primary.key}_custom`];
+    const detailLegacyValue =
+      detailOption?.key === "other" && customDetail?.trim() ? customDetail.trim() : detailOption?.legacyValue;
+
+    const concernLabels = [detailLegacyValue, detailSecondaryOption?.legacyValue, supportOption?.legacyValue]
       .filter(Boolean)
       .map((item) => String(item));
 
@@ -789,7 +801,7 @@ export function LoveInputStepper({ serviceType, initialSubjectA, isSubmitting, o
       {withPartner ? (
         <section className="space-y-4">
           <div className="rounded-2xl border border-[#24303F]/10 bg-[#F8FAFC] p-4 text-[13px] text-text-secondary">
-            좌측은 회원정보 기반 자동 입력이며, 필요하면 `내 정보 수정`으로 바로 변경할 수 있습니다.
+            본인 정보를 바로 확인하고 자유롭게 수정할 수 있습니다.
           </div>
           <div className="grid gap-4 lg:grid-cols-2">
             <BirthInputCard
@@ -798,17 +810,7 @@ export function LoveInputStepper({ serviceType, initialSubjectA, isSubmitting, o
               onChange={setSubjectA}
               readOnly={!isEditingMine}
               noteTag={initialSubjectA ? "회원정보 자동 입력" : undefined}
-              actionSlot={
-                initialSubjectA ? (
-                  <button
-                    type="button"
-                    className="rounded-lg border border-border px-3 py-1.5 text-[12px] font-semibold text-text-secondary hover:bg-gray-50"
-                    onClick={() => setIsEditingMine((prev) => !prev)}
-                  >
-                    {isEditingMine ? "자동입력으로 복귀" : "내 정보 수정"}
-                  </button>
-                ) : undefined
-              }
+              actionSlot={null}
             />
             <BirthInputCard title="상대방 정보" subject={subjectB} onChange={setSubjectB} noteTag="직접 입력" />
           </div>
@@ -820,17 +822,7 @@ export function LoveInputStepper({ serviceType, initialSubjectA, isSubmitting, o
           onChange={setSubjectA}
           readOnly={!isEditingMine}
           noteTag={initialSubjectA ? "회원정보 자동 입력" : undefined}
-          actionSlot={
-            initialSubjectA ? (
-              <button
-                type="button"
-                className="rounded-lg border border-border px-3 py-1.5 text-[12px] font-semibold text-text-secondary hover:bg-gray-50"
-                onClick={() => setIsEditingMine((prev) => !prev)}
-              >
-                {isEditingMine ? "자동입력으로 복귀" : "내 정보 수정"}
-              </button>
-            ) : undefined
-          }
+            actionSlot={null}
         />
       )}
 
@@ -848,43 +840,58 @@ export function LoveInputStepper({ serviceType, initialSubjectA, isSubmitting, o
         </div>
 
         {contextStep === 1 ? (
-          <ContextQuestionCard
-            question={scenarioQuestion}
-            value={contextSelections[scenarioQuestion.key]}
-            onChange={updateScenario}
-          />
-        ) : null}
-
-        {contextStep === 2 ? (
           <div className="space-y-3">
             <ContextQuestionCard
-              question={detailGroup.primary}
-              value={contextSelections[detailGroup.primary.key]}
-              onChange={(value) => updateSelection(detailGroup.primary.key, value)}
+              question={scenarioQuestion}
+              value={contextSelections[scenarioQuestion.key]}
+              onChange={updateScenario}
             />
-            {detailGroup.secondary ? (
-              <ContextQuestionCard
-                question={detailGroup.secondary}
-                value={contextSelections[detailGroup.secondary.key]}
-                onChange={(value) => updateSelection(detailGroup.secondary!.key, value)}
-              />
-            ) : null}
-            {detailGroup.exactDateLabel ? (
-              <div className="space-y-2 rounded-2xl border border-dashed border-border bg-[#FCFDFE] p-4">
-                <p className="text-[13px] font-semibold text-foreground">{detailGroup.exactDateLabel}</p>
-                <p className="text-[12px] text-text-secondary">기간 칩 선택이 기본이며, 필요하면 날짜를 추가로 입력하세요.</p>
-                <input
-                  type="date"
-                  className="h-11 w-full rounded-xl border border-border px-3 text-[14px]"
-                  value={contextExactDate}
-                  onChange={(event) => setContextExactDate(event.target.value)}
+            {selectedScenario ? (
+              <>
+                <ContextQuestionCard
+                  question={detailGroup.primary}
+                  value={contextSelections[detailGroup.primary.key]}
+                  onChange={(value) => updateSelection(detailGroup.primary.key, value)}
                 />
-              </div>
+                {contextSelections[detailGroup.primary.key] === "other" ? (
+                  <div className="space-y-2 rounded-2xl border border-dashed border-border bg-[#FCFDFE] p-4">
+                    <p className="text-[13px] font-semibold text-foreground">구체적인 고민 작성 (기타)</p>
+                    <input
+                      className="h-11 w-full rounded-xl border border-border px-3 text-[14px]"
+                      placeholder="예: 가치관 차이로 인한 잦은 다툼"
+                      value={contextSelections[`${detailGroup.primary.key}_custom`] || ""}
+                      onChange={(event) => updateSelection(`${detailGroup.primary.key}_custom`, event.target.value)}
+                    />
+                  </div>
+                ) : null}
+                {detailGroup.secondary ? (
+                  <ContextQuestionCard
+                    question={detailGroup.secondary}
+                    value={contextSelections[detailGroup.secondary.key]}
+                    onChange={(value) => updateSelection(detailGroup.secondary!.key, value)}
+                  />
+                ) : null}
+                {detailGroup.exactDateLabel ? (
+                  <div className="space-y-2 rounded-2xl border border-dashed border-border bg-[#FCFDFE] p-4">
+                    <p className="text-[13px] font-semibold text-foreground">{detailGroup.exactDateLabel}</p>
+                    <p className="text-[12px] text-text-secondary">기간 칩 선택이 기본이며, 필요하면 날짜를 추가로 입력하세요.</p>
+                    <input
+                      type="date"
+                      className="h-11 w-full rounded-xl border border-border px-3 text-[14px]"
+                      value={contextExactDate}
+                      onChange={(event) => setContextExactDate(event.target.value)}
+                    />
+                  </div>
+                ) : null}
+              </>
             ) : null}
+            <p className="text-[11px] text-text-secondary">
+              💡 이 선택은 리포트의 분석 초점과 톤을 결정합니다.
+            </p>
           </div>
         ) : null}
 
-        {contextStep === 3 ? (
+        {contextStep === 2 ? (
           <div className="space-y-3">
             <ContextQuestionCard
               question={focusGroup.primary}
@@ -898,15 +905,18 @@ export function LoveInputStepper({ serviceType, initialSubjectA, isSubmitting, o
                 onChange={(value) => updateSelection(focusGroup.secondary!.key, value)}
               />
             ) : null}
+            <p className="text-[11px] text-text-secondary">
+              💡 관심 포인트에 따라 리포트의 타이밍 예측과 점수 가중치가 달라집니다.
+            </p>
           </div>
         ) : null}
 
-        {contextStep === 4 ? (
+        {contextStep === 3 ? (
           <div className="space-y-3">
             <div className="rounded-2xl border border-border bg-[#FCFDFE] p-4">
               <p className="text-[14px] font-semibold text-foreground">입력 검토</p>
               <p className="mt-1 text-[12px] text-text-secondary">
-                선택값은 결과 리포트의 맥락 문장으로 사용됩니다. 필요한 항목만 수정하고 제출하세요.
+                선택값은 리포트의 분석 초점, 점수 보정, 상담 톤에 직접 반영됩니다. 필요한 항목만 수정하고 제출하세요.
               </p>
               <div className="mt-3 space-y-2">
                 {reviewItems.map((item) => (
@@ -928,6 +938,15 @@ export function LoveInputStepper({ serviceType, initialSubjectA, isSubmitting, o
                   </div>
                 ))}
               </div>
+            </div>
+
+            <div className="rounded-xl border border-blue-100 bg-blue-50/50 px-3 py-2.5">
+              <p className="text-[12px] font-semibold text-blue-700">이 선택으로 달라지는 것</p>
+              <ul className="mt-1 space-y-0.5 text-[11px] text-blue-600">
+                <li>• 리포트 분석 초점과 상담 톤이 선택값에 맞춤 밀착 적용됩니다</li>
+                <li>• 관심 포인트와 결혼의향에 따라 점수 가중치가 보정됩니다</li>
+                <li>• 시나리오에 따라 각 섹션의 분석 깊이가 달라집니다</li>
+              </ul>
             </div>
 
             <input
@@ -969,10 +988,10 @@ export function LoveInputStepper({ serviceType, initialSubjectA, isSubmitting, o
               {isSubmitting
                 ? "분석 중..."
                 : serviceType === "future-partner"
-                ? "미래 인연 상담 시작"
-                : serviceType === "couple-report"
-                ? "커플 상담 시작"
-                : "재회 가능성 상담 시작"}
+                  ? "미래 인연 상담 시작"
+                  : serviceType === "couple-report"
+                    ? "커플 상담 시작"
+                    : "재회 가능성 상담 시작"}
             </Button>
           )}
         </div>

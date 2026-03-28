@@ -1,4 +1,4 @@
-﻿import { render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import ResultPage from "@/pages/ResultPage";
@@ -83,6 +83,8 @@ vi.mock("@/lib/analytics", () => ({
 
 describe("ResultPage lifetime rendering", () => {
   it("renders stored daeun/golden periods without synthetic year calculation", async () => {
+    sampleResult.isLocked = false;
+
     render(
       <MemoryRouter initialEntries={["/result/result-1"]}>
         <Routes>
@@ -98,5 +100,22 @@ describe("ResultPage lifetime rendering", () => {
     expect(screen.getByText("핵심 상승 구간")).toBeInTheDocument();
     expect(screen.getByText("35~44세")).toBeInTheDocument();
     expect(screen.queryByText("2009년")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "저장 및 공유" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "전체 리포트 열기 · 2,900원" })).not.toBeInTheDocument();
+  });
+
+  it("shows unlock CTA and hides share button when report is locked", async () => {
+    sampleResult.isLocked = true;
+
+    render(
+      <MemoryRouter initialEntries={["/result/result-1"]}>
+        <Routes>
+          <Route path="/result/:resultId" element={<ResultPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByRole("button", { name: "전체 리포트 열기 · 2,900원" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "저장 및 공유" })).not.toBeInTheDocument();
   });
 });

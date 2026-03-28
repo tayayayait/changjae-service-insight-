@@ -11,7 +11,7 @@ serve(async (request) => {
   const rawPayload = typeof body.payload === "object" && body.payload !== null ? body.payload as Record<string, unknown> : {};
 
   return proxyEdgeFunction({
-    targetFunction: "love-reports",
+    targetFunction: "love-reports-center",
     payload: {
       action: "create",
       payload: {
@@ -21,5 +21,8 @@ serve(async (request) => {
     },
     request,
     timeoutMs: 45_000,
+    extraHeaders: {
+      "x-internal-create": "1",
+    },
   });
 });

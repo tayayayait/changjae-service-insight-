@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { SajuServiceCard } from "@/components/common/SajuServiceCard";
 import { trackEvent } from "@/lib/analytics";
@@ -12,9 +11,9 @@ interface Product {
   description: string;
   to: string;
   badge: string;
-  eta: string;
   icon: LucideIcon;
   accentClassName: string;
+  imageUrl?: string;
 }
 
 interface ProductGridProps {
@@ -27,25 +26,6 @@ interface ProductGridProps {
   onResetFilters?: () => void;
   onMoveToNewYear?: () => void;
 }
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 15 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.35, ease: [0.2, 0, 0, 1] as const },
-  },
-};
-
-const container = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-    },
-  },
-};
 
 const buttonClassName =
   "rounded-xl border px-3 py-2 text-xs font-bold transition-colors hover:bg-gray-50 border-gray-200 text-gray-700";
@@ -137,9 +117,9 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
                   description={product.description}
                   to={product.to}
                   badge={product.badge}
-                  eta={product.eta}
                   icon={product.icon}
                   accentClassName={product.accentClassName}
+                  imageUrl={product.imageUrl}
                   onClick={() => handleFallbackClick(product.id)}
                 />
               ))}
@@ -151,26 +131,23 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   }
 
   return (
-    <motion.div
+    <div
       key={activeTabId}
-      variants={container}
-      initial="hidden"
-      animate="visible"
-      className="grid gap-4 grid-cols-1 sm:grid-cols-2 w-full"
+      className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2"
     >
       {products.map((product) => (
-        <motion.div key={product.id} variants={fadeUp} className="h-full">
+        <div key={product.id} className="h-full">
           <SajuServiceCard
             title={product.title}
             description={product.description}
             to={product.to}
             badge={product.badge}
-            eta={product.eta}
             icon={product.icon}
             accentClassName={product.accentClassName}
+            imageUrl={product.imageUrl}
           />
-        </motion.div>
+        </div>
       ))}
-    </motion.div>
+    </div>
   );
 };
