@@ -18,7 +18,8 @@ export function GNB() {
   const [menuOpen, setMenuOpen] = useState(false);
   const resetToGuestOwner = useOwnerStore((state) => state.resetToGuestOwner);
   const isHome = location.pathname === "/";
-  const hideTopNavigation = location.pathname === "/saju";
+  const authRoutes = ["/login", "/signup", "/verify-email", "/setup-profile"];
+  const hideTopNavigation = location.pathname === "/saju" || authRoutes.includes(location.pathname);
   const currentSearch = `${location.pathname}${location.search}`;
 
   useEffect(() => {

@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 
 export default function VerifyEmailPage() {
   return (
-    <AppLayout>
+    <AppLayout hideBottomNav={true}>
       <div className="mx-auto flex min-h-[calc(100vh-80px)] w-full max-w-lg flex-col justify-center px-6 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

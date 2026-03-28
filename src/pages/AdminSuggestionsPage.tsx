@@ -5,8 +5,7 @@ import { Link } from "react-router-dom";
 import { useSuggestionStore, type Suggestion } from "@/store/useSuggestionStore";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-
-const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN || "";
+import { supabase } from "@/lib/supabase";
 
 const STATUS_OPTIONS: { value: Suggestion["status"]; label: string; color: string }[] = [
   { value: "pending", label: "대기중", color: "bg-amber-100 text-amber-700" },
@@ -33,6 +32,7 @@ export default function AdminSuggestionsPage() {
   const [pinError, setPinError] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [adminNotes, setAdminNotes] = useState<Record<string, string>>({});
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   const {
     suggestions,
@@ -42,13 +42,28 @@ export default function AdminSuggestionsPage() {
     isLoading,
   } = useSuggestionStore();
 
-  const handlePinSubmit = () => {
-    if (pinInput === ADMIN_PIN) {
-      setAuthenticated(true);
-      setPinError(false);
-      fetchSuggestions();
-    } else {
+  const handlePinSubmit = async () => {
+    if (!pinInput.trim()) return;
+    setIsAuthenticating(true);
+    setPinError(false);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-auth', {
+        body: { pin: pinInput }
+      });
+
+      if (error || !data?.success) {
+        setPinError(true);
+      } else {
+        setAuthenticated(true);
+        setPinError(false);
+        fetchSuggestions();
+      }
+    } catch (e) {
+      console.error("Admin Auth Error:", e);
       setPinError(true);
+    } finally {
+      setIsAuthenticating(false);
     }
   };
 
@@ -116,13 +131,14 @@ export default function AdminSuggestionsPage() {
             <input
               type="password"
               value={pinInput}
+              disabled={isAuthenticating}
               onChange={(e) => {
                 setPinInput(e.target.value);
                 setPinError(false);
               }}
               onKeyDown={(e) => e.key === "Enter" && handlePinSubmit()}
               placeholder="비밀번호"
-              className={`w-full rounded-xl border px-4 py-3.5 text-[15px] text-gray-900 outline-none transition-all ${
+              className={`w-full rounded-xl border px-4 py-3.5 text-[15px] text-gray-900 outline-none transition-all disabled:opacity-50 ${
                 pinError
                   ? "border-red-300 bg-red-50/50 focus:ring-red-100"
                   : "border-gray-200 bg-gray-50/50 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
@@ -133,9 +149,10 @@ export default function AdminSuggestionsPage() {
             )}
             <Button
               onClick={handlePinSubmit}
-              className="w-full h-12 rounded-xl bg-gray-900 text-white font-bold text-[14px] hover:bg-gray-800"
+              disabled={isAuthenticating}
+              className="w-full h-12 rounded-xl bg-gray-900 text-white font-bold text-[14px] hover:bg-gray-800 disabled:opacity-50"
             >
-              확인
+              {isAuthenticating ? "인증 중..." : "확인"}
             </Button>
           </div>
 

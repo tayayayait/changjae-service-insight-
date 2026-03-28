@@ -1313,60 +1313,60 @@ export const getSajuReportStrategy = (serviceType: string): SajuReportStrategy =
 
 export const DAILY_FORTUNE_SCHEMA = `{
   "score": 85,
-  "summary": "?ㅻ뒛 ?댁꽭 珥앺룊",
-  "details": "?ㅻ뒛 ?먮쫫??????곸꽭 ?댁꽍",
-  "luckyColor": "?⑥깋",
-  "luckyItem": "?명듃",
+  "summary": "오늘 운세 총평",
+  "details": "오늘 운세의 상세 해석",
+  "luckyColor": "행운색",
+  "luckyItem": "행운 아이템",
   "luckyNumber": 7,
-  "healthTip": "吏㏃? ?ㅽ듃?덉묶?쇰줈 湲댁옣????댁＜?몄슂.",
+  "healthTip": "가벼운 스트레칭으로 긴장을 풀어주세요.",
   "categories": {
     "total": {
       "score": 85,
-      "summary": "珥앹슫 ?붿빟",
-      "detail": "珥앹슫 ?곸꽭",
-      "advice": "?됰룞 議곗뼵",
-      "luckyTip": "?꾩????섎뒗 ?좏깮",
-      "cautionPoint": "二쇱쓽 ?ъ씤??
+      "summary": "총운 요약",
+      "detail": "총운 상세",
+      "advice": "행동 조언",
+      "luckyTip": "행운을 높이는 선택",
+      "cautionPoint": "주의 포인트"
     },
     "love": {
       "score": 70,
-      "summary": "?곗븷 ?붿빟",
-      "detail": "?곗븷 ?곸꽭",
-      "advice": "?됰룞 議곗뼵",
-      "luckyTip": "?꾩????섎뒗 ?좏깮",
-      "cautionPoint": "二쇱쓽 ?ъ씤??
+      "summary": "연애 요약",
+      "detail": "연애 상세",
+      "advice": "행동 조언",
+      "luckyTip": "행운을 높이는 선택",
+      "cautionPoint": "주의 포인트"
     },
     "wealth": {
       "score": 90,
-      "summary": "?щЪ ?붿빟",
-      "detail": "?щЪ ?곸꽭",
-      "advice": "?됰룞 議곗뼵",
-      "luckyTip": "?꾩????섎뒗 ?좏깮",
-      "cautionPoint": "二쇱쓽 ?ъ씤??
+      "summary": "재물 요약",
+      "detail": "재물 상세",
+      "advice": "행동 조언",
+      "luckyTip": "행운을 높이는 선택",
+      "cautionPoint": "주의 포인트"
     },
     "career": {
       "score": 65,
-      "summary": "而ㅻ━???붿빟",
-      "detail": "而ㅻ━???곸꽭",
-      "advice": "?됰룞 議곗뼵",
-      "luckyTip": "?꾩????섎뒗 ?좏깮",
-      "cautionPoint": "二쇱쓽 ?ъ씤??
+      "summary": "커리어 요약",
+      "detail": "커리어 상세",
+      "advice": "행동 조언",
+      "luckyTip": "행운을 높이는 선택",
+      "cautionPoint": "주의 포인트"
     },
     "study": {
       "score": 80,
-      "summary": "?숈뾽 ?붿빟",
-      "detail": "?숈뾽 ?곸꽭",
-      "advice": "?됰룞 議곗뼵",
-      "luckyTip": "?꾩????섎뒗 ?좏깮",
-      "cautionPoint": "二쇱쓽 ?ъ씤??
+      "summary": "학업 요약",
+      "detail": "학업 상세",
+      "advice": "행동 조언",
+      "luckyTip": "행운을 높이는 선택",
+      "cautionPoint": "주의 포인트"
     },
     "health": {
       "score": 75,
-      "summary": "嫄닿컯 ?붿빟",
-      "detail": "嫄닿컯 ?곸꽭",
-      "advice": "?됰룞 議곗뼵",
-      "luckyTip": "?꾩????섎뒗 ?좏깮",
-      "cautionPoint": "二쇱쓽 ?ъ씤??
+      "summary": "건강 요약",
+      "detail": "건강 상세",
+      "advice": "행동 조언",
+      "luckyTip": "행운을 높이는 선택",
+      "cautionPoint": "주의 포인트"
     }
   }
 }`;
