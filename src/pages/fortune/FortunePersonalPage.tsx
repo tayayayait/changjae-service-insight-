@@ -11,6 +11,7 @@ import { useFortunePersonalFlow } from "@/hooks/fortune/useFortunePersonalFlow";
 import { useFortuneStore } from "@/store/useFortuneStore";
 import { useResultStore } from "@/store/useResultStore";
 import { MysticalLoading } from "@/components/common/MysticalLoading";
+import { AdGate } from "@/components/common/AdGate";
 
 export default function FortunePersonalPage() {
   const [searchParams] = useSearchParams();
@@ -86,6 +87,7 @@ export default function FortunePersonalPage() {
         ) : null}
 
         {!isLoading && !error && fortune ? (
+          <AdGate enabled={true} countdownSec={5}>
           <div className="space-y-8">
             <FortuneResultCard
               title="오늘 운세"
@@ -130,6 +132,7 @@ export default function FortunePersonalPage() {
               </div>
             </section>
           </div>
+          </AdGate>
         ) : null}
       </div>
     </AppLayout>

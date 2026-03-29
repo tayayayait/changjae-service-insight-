@@ -4,6 +4,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { ErrorCard } from "@/components/common/ErrorCard";
 import { SkeletonCard } from "@/components/common/SkeletonCard";
 import { FortuneResultCard } from "@/components/fortune/FortuneResultCard";
+import { AdGate } from "@/components/common/AdGate";
 import { FortuneSubNav } from "@/components/fortune/FortuneSubNav";
 import { QuickFortuneInputCard } from "@/components/fortune/QuickFortuneInputCard";
 import { getStarSignFortune, getZodiacFortune } from "@/lib/geminiClient";
@@ -109,7 +110,7 @@ export default function FortuneQuickPage() {
 
               {zodiacLoading ? <SkeletonCard lines={4} /> : null}
               {!zodiacLoading && zodiacError ? <ErrorCard message={zodiacError} onRetry={() => void loadZodiac(zodiac, zodiacPeriod)} /> : null}
-              {!zodiacLoading && !zodiacError && zodiacResult ? <FortuneResultCard title="띠 기반 결과" fortune={zodiacResult} /> : null}
+              {!zodiacLoading && !zodiacError && zodiacResult ? <AdGate enabled={true} countdownSec={5}><FortuneResultCard title="띠 기반 결과" fortune={zodiacResult} /></AdGate> : null}
             </div>
           ) : null}
 
@@ -131,7 +132,7 @@ export default function FortuneQuickPage() {
 
               {starLoading ? <SkeletonCard lines={4} /> : null}
               {!starLoading && starError ? <ErrorCard message={starError} onRetry={() => void loadStarSign(starSign, starPeriod)} /> : null}
-              {!starLoading && !starError && starResult ? <FortuneResultCard title="별자리 기반 결과" fortune={starResult} /> : null}
+              {!starLoading && !starError && starResult ? <AdGate enabled={true} countdownSec={5}><FortuneResultCard title="별자리 기반 결과" fortune={starResult} /></AdGate> : null}
             </div>
           ) : null}
         </div>

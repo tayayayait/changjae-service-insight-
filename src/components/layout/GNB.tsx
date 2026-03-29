@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, MoonStar, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { prefetchRoute } from "@/lib/routePrefetch";
 import { GLOBAL_NAV_ITEMS, HOME_FOCUS_LINKS, HOME_PATH } from "@/data/mockData";
@@ -47,13 +47,15 @@ export function GNB() {
           onMouseEnter={() => handlePrefetch(HOME_PATH)}
           onFocus={() => handlePrefetch(HOME_PATH)}
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#24303F] text-[#C9A86A]">
-            <MoonStar className="h-5 w-5" />
-          </div>
+          <img
+            src="/images/saju-insight-logo.png"
+            alt="사주 인사이트"
+            className="h-14 w-14 rounded-xl object-contain"
+          />
           <div className="min-w-0">
             <span className="block text-title font-editorial text-foreground">사주 인사이트</span>
             <span className="block text-[11px] font-semibold text-text-secondary">
-              Premium Wellness Editorial
+              SAJU INSIGHT
             </span>
           </div>
         </Link>

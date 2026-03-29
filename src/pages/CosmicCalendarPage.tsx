@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCosmicCalendarFlow } from "@/hooks/astrology/useCosmicCalendarFlow";
+import { AdGate } from "@/components/common/AdGate";
 import { AstrologyRequest } from "@/types/result";
 
 type LocationOption = {
@@ -301,6 +302,7 @@ export default function CosmicCalendarPage() {
         ) : null}
 
         {!isLoading && !fetchError && calendarData ? (
+          <AdGate enabled={true} countdownSec={5}>
           <div className="space-y-5">
             <Card className="rounded-3xl border-[#24303F]/10 bg-white">
               <CardHeader>
@@ -394,6 +396,7 @@ export default function CosmicCalendarPage() {
               </CardContent>
             </Card>
           </div>
+          </AdGate>
         ) : null}
       </div>
     </AnalysisPageShell>

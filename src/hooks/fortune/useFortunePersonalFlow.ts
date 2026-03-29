@@ -58,8 +58,14 @@ export function useFortunePersonalFlow({
       return;
     }
 
+    // 이미 캐시에 결과가 있으면 중복 호출 방지
+    const cached = cache.today[selectedCategory];
+    if (cached && retryToken === 0) {
+      return;
+    }
+
     void fetchFortune(baseResult, "today", selectedCategory, retryToken > 0);
-  }, [baseResult, fetchFortune, retryToken, selectedCategory]);
+  }, [baseResult, cache.today, fetchFortune, retryToken, selectedCategory]);
 
   useEffect(() => {
     setSelectedCategory((prev) => (prev === resolvedInitialCategory ? prev : resolvedInitialCategory));

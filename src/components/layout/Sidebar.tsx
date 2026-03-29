@@ -61,17 +61,22 @@ export const Sidebar = () => {
 
   return (
     <div className="flex h-full flex-col border-r border-border bg-white pt-4 text-foreground shadow-sm">
-      <div className="mb-6 px-8">
+      <div className="mb-5 px-6 pt-1">
         <Link
           to={HOME_PATH}
-          className="flex items-center gap-2 text-xl font-bold tracking-tight"
+          className="flex items-center gap-3 transition-opacity hover:opacity-80"
           onMouseEnter={() => handlePrefetch(HOME_PATH)}
           onFocus={() => handlePrefetch(HOME_PATH)}
         >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#24303F] text-[#C9A86A]">
-            <MoonStar className="h-5 w-5" />
+          <img
+            src="/images/saju-insight-logo.png"
+            alt="사주 인사이트"
+            className="h-[52px] w-[52px] rounded-xl object-contain"
+          />
+          <div className="min-w-0">
+            <span className="block text-[17px] font-bold tracking-tight text-[#24303F]">사주 인사이트</span>
+            <span className="block text-[10px] font-medium tracking-[0.08em] text-[#9CA3AF]">SAJU INSIGHT</span>
           </div>
-          <span className="text-xl font-bold tracking-tight text-[#24303F]">사주 인사이트</span>
         </Link>
       </div>
 

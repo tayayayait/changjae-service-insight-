@@ -13,6 +13,7 @@ import {
 import ReactMarkdown from "react-markdown";
 import { AnalysisPageShell } from "@/components/layout/AnalysisPageShell";
 import { ErrorCard } from "@/components/common/ErrorCard";
+import { AdGate } from "@/components/common/AdGate";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useConsultStore } from "@/store/useConsultStore";
@@ -448,6 +449,7 @@ export default function DailyAstrologyPage() {
                 ) : null}
 
                 {loadState === "success" && horoscope ? (
+                  <AdGate enabled={true} countdownSec={5}>
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
                     <section className="rounded-2xl border border-[#24303F]/10 bg-[#EAF1F7] p-5">
                       <p className="text-xs font-black uppercase tracking-[0.2em] text-[#24303F]">
@@ -547,6 +549,7 @@ export default function DailyAstrologyPage() {
                       </div>
                     )}
                   </motion.div>
+                  </AdGate>
                 ) : null}
               </div>
 

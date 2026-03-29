@@ -1,6 +1,6 @@
 import React from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import { Menu, MoonStar, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 import { Footer } from "./Footer";
 import { useConsultStore } from "@/store/useConsultStore";
@@ -50,11 +50,16 @@ export const SidebarLayout = () => {
         >
           {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#24303F] text-[#C9A86A]">
-            <MoonStar className="h-4 w-4" />
+        <div className="flex items-center gap-2.5">
+          <img
+            src="/images/saju-insight-logo.png"
+            alt="사주 인사이트"
+            className="h-12 w-12 rounded-xl object-contain"
+          />
+          <div className="min-w-0">
+            <div className="text-[15px] font-bold text-foreground leading-tight">사주 인사이트</div>
+            <div className="text-[9px] font-medium tracking-[0.08em] text-[#9CA3AF]">SAJU INSIGHT</div>
           </div>
-          <div className="font-editorial text-lg font-semibold text-foreground">사주 인사이트</div>
         </div>
         <div className="w-10" />
       </div>

@@ -370,6 +370,11 @@ export function useSajuAnalysisFlow({
         const requestedCategoryId = searchParams.get("categoryId");
         const categoryId = resolveTodayCategoryId(requestedCategoryId);
 
+        // 네비게이션 전에 데이터를 미리 로드하여 재분석 방지
+        await loadResultById(saved.id).catch(() => undefined);
+        const { fetchFortune } = useFortuneStore.getState();
+        await fetchFortune(saved, "today", categoryId).catch(() => undefined);
+
         toast({
           title: "분석 완료",
           description: "결과 페이지로 이동합니다.",
@@ -378,10 +383,6 @@ export function useSajuAnalysisFlow({
         navigate(
           `/fortune/personal${isTodayCategoryId(requestedCategoryId) ? `?categoryId=${requestedCategoryId}` : ""}`,
         );
-
-        warmResultDetails();
-        const { fetchFortune } = useFortuneStore.getState();
-        void fetchFortune(saved, "today", categoryId).catch(() => undefined);
       } else {
         toast({
           title: "분석 완료",
