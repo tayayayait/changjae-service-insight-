@@ -20,28 +20,47 @@ export default function PrivacyPage() {
             <section className="space-y-3">
               <h2 className="text-h4 text-foreground font-medium border-b border-border pb-2">1. 수집하는 개인정보 항목 및 목적</h2>
               <ul className="list-disc pl-5 space-y-2 text-body text-text-secondary leading-relaxed marker:text-text-secondary">
-                <li><strong>필수 항목:</strong> 생년월일시, 성별, 출생지 (사주 및 운세 분석 서비스 제공, 정확한 명리학적 리포트 생성)</li>
-                <li><strong>선택 항목:</strong> 관심사 (맞춤형 운세 정보 제공), 이메일 주소 (클라우드 저장소 연동 및 계정 관리 시)</li>
-                <li><strong>자동 수집 항목:</strong> 서비스 이용 기록, 접속 로그, 쿠키, 접속 기기 정보 (부정 이용 방지 및 통계 분석)</li>
+                <li><strong>필수 항목:</strong> 생년월일시, 성별, 출생지 (서비스 제공 및 정확한 분석 리포트 생성)</li>
+                <li><strong>결제 항목:</strong> 유료 서비스 이용 시 결제 수단 확인 및 승인 (결제 대행사에서 처리)</li>
+                <li><strong>자동 수집 항목:</strong> 접속 로그, 기기 정보, 쿠키 (부정 이용 방지 및 통계 분석)</li>
               </ul>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-h4 text-foreground font-medium border-b border-border pb-2">2. 개인정보의 로컬 및 클라우드 저장</h2>
+              <h2 className="text-h4 text-foreground font-medium border-b border-border pb-2">2. 개인정보의 보유 및 이용 기간</h2>
               <p className="text-body text-text-secondary leading-relaxed">
-                사용자의 민감한 사주 명식 데이터는 최고의 보안을 위해 원칙적으로 기기 내에만 저장(Local-Only)됩니다.
+                이용자의 개인정보는 수집 목적이 달성되면 지체 없이 파기합니다. 단, 관련 법령에 따라 다음과 같이 일정 기간 보관합니다.
               </p>
-              <ul className="list-disc pl-5 space-y-2 text-body text-text-secondary leading-relaxed marker:text-text-secondary">
-                <li><strong>기본 저장 모드:</strong> 분석 데이터는 이용자의 브라우저 로컬 스토리지에만 저장되며, 외부 서버로 전송되지 않습니다.</li>
-                <li><strong>서버 연동 모드:</strong> 사용자가 안전한 백업을 위해 명시적으로 "클라우드 저장(Cloud-Save)" 옵션을 활성화하거나, 소셜 로그인을 통해 로그인한 경우에 한하여 암호화되어 중앙 서버로 전송 및 보관됩니다.</li>
+              <ul className="list-disc pl-5 space-y-1 text-body text-text-secondary">
+                <li><strong>계약 또는 청약철회 등에 관한 기록:</strong> 5년 (전자상거래법)</li>
+                <li><strong>대금결제 및 재화 등의 공급에 관한 기록:</strong> 5년 (전자상거래법)</li>
+                <li><strong>소비자의 불만 또는 분쟁처리에 관한 기록:</strong> 3년 (전자상거래법)</li>
               </ul>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-h4 text-foreground font-medium border-b border-border pb-2">3. 개인정보의 보유 및 이용 기간</h2>
+              <h2 className="text-h4 text-foreground font-medium border-b border-border pb-2">3. 개인정보의 제3자 제공</h2>
               <p className="text-body text-text-secondary leading-relaxed">
-                원칙적으로 개인정보 수집 및 이용 목적이 달성된 후에는 해당 정보를 지체 없이 파기합니다. 단, 보호법 및 전자상거래 등에서의 소비자보호에 관한 법률 등 관계 법령의 규정에 의하여 보존할 필요가 있는 경우, 회사는 법령에서 정한 일정한 기간 동안 회원의 개인정보를 안전하게 보관합니다.
+                회사는 원칙적으로 이용자의 개인정보를 제3자에게 제공하지 않습니다. 다만, 서비스 이용 및 결제 처리를 위해 아래와 같이 최소한의 정보를 제공합니다.
               </p>
+              <div className="overflow-x-auto mt-2">
+                <table className="w-full text-sm text-left border-collapse border border-border">
+                  <thead>
+                    <tr className="bg-muted">
+                      <th className="border border-border p-2">제공받는 자</th>
+                      <th className="border border-border p-2">제공 목적</th>
+                      <th className="border border-border p-2">제공 항목</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="border border-border p-2">KG이니시스, 카카오페이, 포트원</td>
+                      <td className="border border-border p-2">결제 처리 및 본인 인증</td>
+                      <td className="border border-border p-2">결제 정보, 이름, 휴대폰 번호</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </section>
 
             <section className="space-y-3">
