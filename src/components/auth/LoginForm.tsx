@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,17 @@ export function LoginForm({ onSuccess, showTitle = true, defaultNextPath = null 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState<"google" | "kakao" | "email" | null>(null);
+
+  // BFCache 복원(뒤로가기) 시 OAuth 로딩 상태 초기화
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setIsLoading(null);
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const refreshProfile = useAuthStore((state) => state.refreshProfile);
