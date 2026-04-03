@@ -10,17 +10,7 @@ export const Footer: React.FC = () => {
             <h3 className="text-lg font-bold text-stone-900 dark:text-stone-100">타야잇시스템즈(TAYA IT SYSTEMS)</h3>
             <div className="text-sm text-stone-500 dark:text-stone-400 space-y-1.5 leading-relaxed">
               <p>대표자: 유창재 | 사업자등록번호: 679-55-00806</p>
-              <p>
-                통신판매업신고: 제 2026-경북구미-0317 호
-                <a 
-                  href="https://www.ftc.go.kr/bizCommPop.do?wrkr_no=6795500806" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="ml-1.5 underline decoration-stone-300 dark:decoration-stone-700 underline-offset-2 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                >
-                  [사업자정보확인]
-                </a>
-              </p>
+              <p>통신판매업신고: 제 2026-경북구미-0317 호</p>
               <p>주소: 경상북도 구미시 해마루공원로 80, 108동 1001호 (옥계동, 중흥에스-클래스에듀힐스)</p>
               <p>고객센터: 010-9487-4173 | dbcdkwo629@naver.com</p>
               <p>개인정보보호책임자: 유창재</p>
