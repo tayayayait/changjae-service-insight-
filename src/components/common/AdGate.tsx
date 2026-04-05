@@ -37,7 +37,6 @@ export function AdGate({ enabled, countdownSec = 5, children }: AdGateProps) {
     setRemaining(countdownSec);
 
     // 오버레이가 떠 있는 동안 뒷 배경 스크롤 차단
-    const originalStyle = window.getComputedStyle(document.body).overflow;
     document.body.style.overflow = "hidden";
 
     intervalRef.current = setInterval(() => {
@@ -52,8 +51,8 @@ export function AdGate({ enabled, countdownSec = 5, children }: AdGateProps) {
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
-      // 다 닫히면 원래 스크롤 복구
-      document.body.style.overflow = originalStyle;
+      // 다 닫히면 원래 스크롤 복구 (inline style 제거)
+      document.body.style.overflow = "";
     };
   }, [enabled, dismissed, countdownSec]);
 

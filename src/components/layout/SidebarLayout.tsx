@@ -28,7 +28,7 @@ export const SidebarLayout = () => {
   }, [location.pathname]);
 
   return (
-    <div className="relative flex h-screen w-full overflow-hidden bg-background">
+    <div className="fixed inset-0 flex overflow-hidden bg-background">
       {unicornProjectId ? (
         <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-20">
           <React.Suspense fallback={<div className="h-full w-full" />}>
