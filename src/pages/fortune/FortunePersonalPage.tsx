@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ServiceIntroScreen } from "@/components/common/ServiceIntroScreen";
@@ -40,16 +40,7 @@ export default function FortunePersonalPage() {
     initialCategory,
   });
 
-  const rawIsLoading = isBaseLoading || isFortuneLoading;
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (rawIsLoading) {
-      const timer = setTimeout(() => setIsLoading(true), 600);
-      return () => clearTimeout(timer);
-    }
-    setIsLoading(false);
-  }, [rawIsLoading]);
+  const isLoading = isBaseLoading || isFortuneLoading;
   const selectedCategoryTitle =
     DAILY_CATEGORIES.find((category) => category.id === selectedCategory)?.title ?? "영역별 상세";
 
@@ -89,6 +80,10 @@ export default function FortunePersonalPage() {
         {isLoading ? (
           <div className="py-12 space-y-6">
             <MysticalLoading categoryId="saju" title="오늘의 운세를 분석하고 있습니다" />
+            <div className="mx-auto max-w-sm overflow-hidden rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
+              <p className="mb-2 text-center text-[10px] font-bold tracking-widest text-slate-400">ADVERTISEMENT</p>
+              <AdUnit slot="6738850110" format="auto" className="min-h-[250px]" />
+            </div>
           </div>
         ) : null}
 
