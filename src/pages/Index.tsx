@@ -524,7 +524,11 @@ export default function Index() {
           <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={9} className="mb-12">
             <div className="overflow-hidden rounded-3xl border border-border bg-white p-4 shadow-sm">
               <p className="mb-2 text-center text-[11px] font-bold tracking-wider text-slate-400">ADVERTISEMENT</p>
-              <AdUnit slot="7276034608" className="min-h-[100px]" />
+            <AdUnit 
+              slot="7276034608" 
+              format="horizontal" 
+              className="min-h-[100px]" 
+            />
             </div>
           </motion.div>
 
