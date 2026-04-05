@@ -12,6 +12,7 @@ import { useFortuneStore } from "@/store/useFortuneStore";
 import { useResultStore } from "@/store/useResultStore";
 import { MysticalLoading } from "@/components/common/MysticalLoading";
 import { AdGate } from "@/components/common/AdGate";
+import { AdUnit } from "@/components/common/AdUnit";
 
 export default function FortunePersonalPage() {
   const [searchParams] = useSearchParams();
@@ -77,8 +78,12 @@ export default function FortunePersonalPage() {
         ) : null}
 
         {isLoading ? (
-          <div className="py-12">
+          <div className="py-12 space-y-6">
             <MysticalLoading categoryId="saju" title="오늘의 운세를 분석하고 있습니다" />
+            <div className="mx-auto max-w-sm overflow-hidden rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
+              <p className="mb-2 text-center text-[10px] font-bold tracking-widest text-slate-400">ADVERTISEMENT</p>
+              <AdUnit slot="6738850110" format="rectangle" className="min-h-[250px]" />
+            </div>
           </div>
         ) : null}
 
