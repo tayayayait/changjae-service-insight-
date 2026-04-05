@@ -22,6 +22,7 @@ import { useResultStore } from "@/store/useResultStore";
 import { useBeforeUnload } from "@/hooks/useBeforeUnload";
 import { UserInterest } from "@/types/result";
 import { MysticalLoading } from "@/components/common/MysticalLoading";
+import { AdUnit } from "@/components/common/AdUnit";
 
 type AnalysisPhase = "cache-check" | "ai-analysis" | "result-save";
 
@@ -108,11 +109,15 @@ export default function SajuInputPage() {
   if (isSubmitting) {
     return (
       <AppLayout hideBottomNav>
-        <div className="flex min-h-screen flex-col items-center justify-center bg-white">
+        <div className="flex min-h-screen flex-col items-center justify-center bg-white space-y-8 px-4">
           <MysticalLoading
             categoryId="saju"
             title={ANALYSIS_PHASE_LABELS[analysisPhase as AnalysisPhase] || "사주를 분석하고 있습니다"}
           />
+          <div className="mx-auto w-full max-w-sm overflow-hidden rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
+            <p className="mb-2 text-center text-[10px] font-bold tracking-widest text-slate-400">ADVERTISEMENT</p>
+            <AdUnit slot="6738850110" format="auto" className="min-h-[250px]" />
+          </div>
         </div>
       </AppLayout>
     );
