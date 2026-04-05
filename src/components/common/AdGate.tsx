@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AdUnit } from "./AdUnit";
 
 interface AdGateProps {
   /** 광고 게이트를 활성화할지 여부 */
@@ -21,7 +22,6 @@ export function AdGate({ enabled, countdownSec = 5, children }: AdGateProps) {
   const [dismissed, setDismissed] = useState(false);
   const [remaining, setRemaining] = useState(countdownSec);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const adSlotRef = useRef<HTMLDivElement>(null);
 
   // 카운트다운 타이머
   useEffect(() => {
@@ -44,20 +44,6 @@ export function AdGate({ enabled, countdownSec = 5, children }: AdGateProps) {
     };
   }, [enabled, dismissed, countdownSec]);
 
-  // 광고 슬롯 초기화 시도 (애드센스 승인 후 자동 동작)
-  useEffect(() => {
-    if (!enabled || dismissed) return;
-
-    try {
-      const adsbygoogle = (window as unknown as { adsbygoogle?: unknown[] }).adsbygoogle;
-      if (adsbygoogle && adSlotRef.current) {
-        adsbygoogle.push({});
-      }
-    } catch {
-      // 애드센스가 아직 로드되지 않았거나 미승인 상태 — 무시
-    }
-  }, [enabled, dismissed]);
-
   // 게이트 비활성 또는 이미 해제된 경우 → 바로 콘텐츠 표시
   if (!enabled || dismissed) {
     return <>{children}</>;
@@ -68,58 +54,93 @@ export function AdGate({ enabled, countdownSec = 5, children }: AdGateProps) {
   return (
     <AnimatePresence mode="wait">
       <motion.div
-        key="ad-gate"
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -12 }}
-        className="mx-auto max-w-2xl space-y-6"
+        key="ad-gate-overlay"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-6 backdrop-blur-sm"
       >
-        {/* 헤더 */}
-        <div className="rounded-[28px] border border-[#24303F]/10 bg-white p-8 text-center shadow-sm">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-[#EAF1F7] text-[#C9A86A]">
-            <Sparkles className="h-8 w-8" />
-          </div>
-          <h3 className="mb-2 text-xl font-bold text-[#24303F]">
-            결과가 준비되었습니다!
-          </h3>
-          <p className="text-sm font-medium text-slate-500">
-            잠시 후 결과를 확인하실 수 있습니다.
-          </p>
-        </div>
+        <motion.div
+          key="ad-gate-modal"
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          className="relative w-full max-w-md overflow-hidden rounded-[32px] bg-white p-8 shadow-2xl"
+        >
+          {/* 장식 요소 */}
+          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[#C9A86A]/5" />
+          
+          <div className="relative space-y-6">
+            {/* 헤더 */}
+            <div className="text-center">
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-3xl bg-[#FAF7F2] text-[#C9A86A] shadow-sm">
+                <Sparkles className="h-8 w-8" />
+              </div>
+              <h3 className="mb-2 text-2xl font-bold tracking-tight text-[#24303F]">
+                결과 분석이 완료되었습니다
+              </h3>
+              <p className="text-sm font-medium leading-relaxed text-slate-500">
+                잠시 후 당신의 운명을 확인하실 수 있습니다.<br />
+                분석 결과를 불러오는 동안 대기해 주세요.
+              </p>
+            </div>
 
-        {/* 광고 영역 — 애드센스 인피드 광고 슬롯 */}
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <div
-            ref={adSlotRef}
-            className="flex min-h-[250px] items-center justify-center text-sm text-slate-400"
-          >
-            {/* 애드센스 미승인 동안 보여지는 플레이스홀더 */}
-            <div className="text-center space-y-2">
-              <p className="text-xs text-slate-400">광고</p>
-              <div className="h-[200px] w-full rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
-                <p className="text-slate-400 text-sm">AD</p>
+            {/* 광고 영역 */}
+            <div className="overflow-hidden rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+              <div className="text-center space-y-3">
+                <p className="text-[10px] font-bold tracking-widest text-[#C9A86A]">ADVERTISEMENT</p>
+                <div className="flex min-h-[250px] items-center justify-center">
+                  <AdUnit 
+                    slot="8246335490" 
+                    format="rectangle" 
+                    className="w-full"
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* 카운트다운 + 버튼 */}
-        <div className="text-center space-y-4">
-          {!isReady ? (
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#C9A86A]/30 bg-[#FAF7F2] px-5 py-2.5 text-sm font-bold text-[#24303F]">
-              <Timer className="h-4 w-4 text-[#C9A86A]" />
-              <span>{remaining}초 후 결과를 확인할 수 있습니다</span>
+            {/* 카운트다운 + 버튼 */}
+            <div className="space-y-4 pt-2">
+              <Button
+                onClick={() => setDismissed(true)}
+                disabled={!isReady}
+                className="group relative h-15 w-full overflow-hidden rounded-2xl bg-[#24303F] text-base font-bold text-white shadow-lg transition-all hover:bg-[#1D2733] disabled:bg-slate-100 disabled:text-slate-400"
+              >
+                {isReady ? (
+                  <motion.div
+                    initial={{ y: 10, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    className="flex items-center justify-center gap-2"
+                  >
+                    결과 즉시 확인하기 ✨
+                  </motion.div>
+                ) : (
+                  <div className="flex items-center justify-center gap-3">
+                    <Timer className="h-4 w-4 animate-pulse text-[#C9A86A]" />
+                    <span>분석 대기 중... ({remaining}초)</span>
+                  </div>
+                )}
+                
+                {/* 진행률 바 (버튼 하단) */}
+                {!isReady && (
+                  <motion.div 
+                    className="absolute bottom-0 left-0 h-1 bg-[#C9A86A]/40"
+                    initial={{ width: "0%" }}
+                    animate={{ width: `${((countdownSec - remaining) / countdownSec) * 100}%` }}
+                    transition={{ ease: "linear" }}
+                  />
+                )}
+              </Button>
+              
+              {!isReady && (
+                <p className="text-center text-[12px] font-medium text-slate-400">
+                  더 나은 서비스를 위해 광고를 잠시만 지켜봐 주세요.
+                </p>
+              )}
             </div>
-          ) : null}
-
-          <Button
-            onClick={() => setDismissed(true)}
-            disabled={!isReady}
-            className="h-14 w-full max-w-sm rounded-2xl text-base font-bold shadow-sm disabled:opacity-40"
-          >
-            {isReady ? "결과 확인하기 ✨" : `${remaining}초 대기 중...`}
-          </Button>
-        </div>
+          </div>
+        </motion.div>
       </motion.div>
     </AnimatePresence>
   );

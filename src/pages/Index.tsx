@@ -28,6 +28,7 @@ import { TrustSection } from "@/components/home/TrustSection";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { HeroVideoBackground } from "@/components/home/HeroVideoBackground";
+import { AdUnit } from "@/components/common/AdUnit";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -520,6 +521,13 @@ export default function Index() {
         </section>
 
         <section className="mx-auto w-full max-w-[1280px] px-5 pb-16 md:px-8">
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={9} className="mb-12">
+            <div className="overflow-hidden rounded-3xl border border-border bg-white p-4 shadow-sm">
+              <p className="mb-2 text-center text-[11px] font-bold tracking-wider text-slate-400">ADVERTISEMENT</p>
+              <AdUnit slot="7276034608" className="min-h-[100px]" />
+            </div>
+          </motion.div>
+
           <motion.footer initial="hidden" animate="visible" variants={fadeUp} custom={8} className="rounded-[28px] border border-border bg-bg-elevated px-5 py-6 shadow-sm md:px-6">
             <div className="grid gap-6 md:grid-cols-[1.1fr_0.9fr] md:items-end">
               <div>
