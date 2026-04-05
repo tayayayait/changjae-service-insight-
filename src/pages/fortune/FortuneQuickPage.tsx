@@ -29,7 +29,25 @@ export default function FortuneQuickPage() {
   const [zodiacResult, setZodiacResult] = useState<FortuneResult | null>(null);
   const [starResult, setStarResult] = useState<FortuneResult | null>(null);
   const [zodiacLoading, setZodiacLoading] = useState(false);
+  const [zodiacDeferredLoading, setZodiacDeferredLoading] = useState(false);
   const [starLoading, setStarLoading] = useState(false);
+  const [starDeferredLoading, setStarDeferredLoading] = useState(false);
+
+  useEffect(() => {
+    if (zodiacLoading) {
+      const timer = setTimeout(() => setZodiacDeferredLoading(true), 600);
+      return () => clearTimeout(timer);
+    }
+    setZodiacDeferredLoading(false);
+  }, [zodiacLoading]);
+
+  useEffect(() => {
+    if (starLoading) {
+      const timer = setTimeout(() => setStarDeferredLoading(true), 600);
+      return () => clearTimeout(timer);
+    }
+    setStarDeferredLoading(false);
+  }, [starLoading]);
   const [zodiacError, setZodiacError] = useState<string | null>(null);
   const [starError, setStarError] = useState<string | null>(null);
 
@@ -109,13 +127,9 @@ export default function FortuneQuickPage() {
                 isLoading={zodiacLoading}
               />
 
-              {zodiacLoading ? (
+              {zodiacDeferredLoading ? (
                 <div className="space-y-4">
                   <SkeletonCard lines={4} />
-                  <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
-                    <p className="mb-2 text-center text-[10px] font-bold tracking-widest text-slate-400">ADVERTISEMENT</p>
-                    <AdUnit slot="6738850110" format="rectangle" className="min-h-[250px]" />
-                  </div>
                 </div>
               ) : null}
               {!zodiacLoading && zodiacError ? <ErrorCard message={zodiacError} onRetry={() => void loadZodiac(zodiac, zodiacPeriod)} /> : null}
@@ -139,13 +153,9 @@ export default function FortuneQuickPage() {
                 isLoading={starLoading}
               />
 
-              {starLoading ? (
+              {starDeferredLoading ? (
                 <div className="space-y-4">
                   <SkeletonCard lines={4} />
-                  <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
-                    <p className="mb-2 text-center text-[10px] font-bold tracking-widest text-slate-400">ADVERTISEMENT</p>
-                    <AdUnit slot="6738850110" format="rectangle" className="min-h-[250px]" />
-                  </div>
                 </div>
               ) : null}
               {!starLoading && starError ? <ErrorCard message={starError} onRetry={() => void loadStarSign(starSign, starPeriod)} /> : null}

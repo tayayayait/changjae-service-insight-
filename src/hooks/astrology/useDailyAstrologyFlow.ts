@@ -89,7 +89,7 @@ export function useDailyAstrologyFlow({
     startTransition(() => {
       setSelectedSign(signData);
       setStep(2);
-      setLoadState("loading");
+      setLoadState("idle"); // 상태를 로딩으로 바로 바꾸지 않고 대기
       setHoroscope(null);
       setHoroscopeMeta(null);
       setErrorMessage(null);
@@ -98,6 +98,13 @@ export function useDailyAstrologyFlow({
         setAutoSelectNotice(AUTO_SELECT_NOTICE);
       }
     });
+
+    const currentRequestId = requestId;
+    setTimeout(() => {
+      if (requestIdRef.current === currentRequestId) {
+        setLoadState((prev) => (prev === "idle" ? "loading" : prev));
+      }
+    }, 600);
 
     try {
       await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
