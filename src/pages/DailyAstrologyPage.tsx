@@ -14,6 +14,7 @@ import ReactMarkdown from "react-markdown";
 import { AnalysisPageShell } from "@/components/layout/AnalysisPageShell";
 import { ErrorCard } from "@/components/common/ErrorCard";
 import { AdGate } from "@/components/common/AdGate";
+import { AdUnit } from "@/components/common/AdUnit";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useConsultStore } from "@/store/useConsultStore";
@@ -431,6 +432,16 @@ export default function DailyAstrologyPage() {
                           </div>
                         );
                       })}
+                    </div>
+
+                    {/* 로딩 중 광고 */}
+                    <div className="mt-6 overflow-hidden rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
+                      <p className="mb-2 text-center text-[10px] font-bold tracking-widest text-slate-400">ADVERTISEMENT</p>
+                      <AdUnit 
+                        slot="6738850110" 
+                        format="rectangle" 
+                        className="min-h-[250px]"
+                      />
                     </div>
                   </div>
                 ) : null}

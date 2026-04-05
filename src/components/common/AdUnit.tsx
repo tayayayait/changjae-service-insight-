@@ -17,34 +17,42 @@ interface AdUnitProps {
 
 /**
  * 구글 애드센스 광고 단위를 렌더링하는 공통 컴포넌트입니다.
+ * SPA 네비게이션 시 중복 push를 방지하기 위해 DOM 상태를 확인합니다.
  */
 export function AdUnit({
-  client = "ca-pub-2295415730305709", // 공통 판매자 ID
+  client = "ca-pub-2295415730305709",
   slot,
   format = "auto",
   responsive = true,
   style = { display: "block" },
   className,
 }: AdUnitProps) {
-  const adRef = useRef<boolean>(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const pushedRef = useRef<boolean>(false);
 
   useEffect(() => {
-    // 이미 로드된 경우 중복 호출 방지
-    if (adRef.current) return;
+    if (pushedRef.current) return;
+
+    // DOM에서 <ins> 요소를 찾아 이미 초기화되었는지 확인
+    const insElement = containerRef.current?.querySelector("ins.adsbygoogle");
+    if (insElement?.getAttribute("data-adsbygoogle-status")) {
+      pushedRef.current = true;
+      return; // 이미 Google이 초기화한 슬롯이므로 skip
+    }
 
     try {
-      const adsbygoogle = (window as any).adsbygoogle;
+      const adsbygoogle = (window as unknown as { adsbygoogle?: unknown[] }).adsbygoogle;
       if (adsbygoogle) {
         adsbygoogle.push({});
-        adRef.current = true;
+        pushedRef.current = true;
       }
-    } catch (err) {
-      console.error("AdSense push error:", err);
+    } catch {
+      // 애드센스 미로드 또는 미승인 상태 — 무시
     }
   }, [slot]);
 
   return (
-    <div className={className}>
+    <div ref={containerRef} className={className}>
       <ins
         className="adsbygoogle"
         style={style}
