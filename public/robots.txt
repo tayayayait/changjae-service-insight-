@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://saju-insight.co.kr/sitemap.xml
+Sitemap: https://www.saju-insight.co.kr/sitemap.xml
